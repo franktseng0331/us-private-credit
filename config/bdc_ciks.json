@@ -1,0 +1,202 @@
+{
+  "ARCC": {
+    "cik": "1287750",
+    "name": "Ares Capital Corporation"
+  },
+  "MAIN": {
+    "cik": "1396440",
+    "name": "Main Street Capital Corporation"
+  },
+  "OBDC": {
+    "cik": "1655888",
+    "name": "Blue Owl Capital Corporation"
+  },
+  "FSIC": {
+    "cik": "1422183",
+    "name": "FS KKR Capital Corp"
+  },
+  "HTGC": {
+    "cik": "1280784",
+    "name": "Hercules Capital Inc"
+  },
+  "GBDC": {
+    "cik": "1476765",
+    "name": "Golub Capital BDC Inc"
+  },
+  "BXSL": {
+    "cik": "1736035",
+    "name": "Blackstone Secured Lending Fund"
+  },
+  "PSEC": {
+    "cik": "1287032",
+    "name": "Prospect Capital Corporation"
+  },
+  "NMFC": {
+    "cik": "1496099",
+    "name": "New Mountain Finance Corporation"
+  },
+  "OCSL": {
+    "cik": "1414932",
+    "name": "Oaktree Specialty Lending Corporation"
+  },
+  "TSLX": {
+    "cik": "1508655",
+    "name": "Sixth Street Specialty Lending Inc"
+  },
+  "TCPC": {
+    "cik": "1370755",
+    "name": "BlackRock TCP Capital Corp"
+  },
+  "MFIC": {
+    "cik": "1278752",
+    "name": "MidCap Financial Investment Corporation"
+  },
+  "PFLT": {
+    "cik": "1504619",
+    "name": "PennantPark Floating Rate Capital Ltd"
+  },
+  "SLRC": {
+    "cik": "1418076",
+    "name": "SLR Investment Corp"
+  },
+  "CSWC": {
+    "cik": "17313",
+    "name": "Capital Southwest Corporation"
+  },
+  "GSBD": {
+    "cik": "1572694",
+    "name": "Goldman Sachs BDC Inc"
+  },
+  "PNNT": {
+    "cik": "1383414",
+    "name": "PennantPark Investment Corporation"
+  },
+  "CCAP": {
+    "cik": "1633336",
+    "name": "Crescent Capital BDC Inc"
+  },
+  "TRIN": {
+    "cik": "1786108",
+    "name": "Trinity Capital Inc"
+  },
+  "BBDC": {
+    "cik": "1379785",
+    "name": "Barings BDC Inc"
+  },
+  "GAIN": {
+    "cik": "1321741",
+    "name": "Gladstone Investment Corporation"
+  },
+  "GLAD": {
+    "cik": "1143513",
+    "name": "Gladstone Capital Corporation"
+  },
+  "FDUS": {
+    "cik": "1513363",
+    "name": "Fidus Investment Corporation"
+  },
+  "HRZN": {
+    "cik": "1487428",
+    "name": "Horizon Technology Finance Corporation"
+  },
+  "WHF": {
+    "cik": "1552198",
+    "name": "WhiteHorse Finance Inc"
+  },
+  "TPVG": {
+    "cik": "1580345",
+    "name": "TriplePoint Venture Growth BDC Corp"
+  },
+  "MRCC": {
+    "cik": "1512931",
+    "name": "Monroe Capital BDC Advisors"
+  },
+  "CGBD": {
+    "cik": "1544206",
+    "name": "Carlyle Secured Lending Inc"
+  },
+  "NCDL": {
+    "cik": "1737924",
+    "name": "Nuveen Churchill Direct Lending Corp"
+  },
+  "PTMN": {
+    "cik": "1372807",
+    "name": "Portman Ridge Finance Corporation"
+  },
+  "RWAY": {
+    "cik": "1653384",
+    "name": "Runway Growth Finance Corp"
+  },
+  "CION": {
+    "cik": "1534254",
+    "name": "CION Investment Corporation"
+  },
+  "OBDC2": {
+    "cik": "1655887",
+    "name": "Blue Owl Capital Corporation II"
+  },
+  "OBDE": {
+    "cik": "1807427",
+    "name": "Blue Owl Capital Corporation III"
+  },
+  "FSKR": {
+    "cik": "1525759",
+    "name": "FS KKR Capital Corp II"
+  },
+  "LRFC": {
+    "cik": "1571329",
+    "name": "Logan Ridge Finance Corporation"
+  },
+  "GDLC": {
+    "cik": "1868878",
+    "name": "Golub Capital Direct Lending Corp"
+  },
+  "SAR": {
+    "cik": "1377936",
+    "name": "Saratoga Investment Corp"
+  },
+  "SCM": {
+    "cik": "1551901",
+    "name": "Stellus Capital Investment Corporation"
+  },
+  "GECC": {
+    "cik": "1675033",
+    "name": "Great Elm Capital Corp"
+  },
+  "OXLC": {
+    "cik": "1495222",
+    "name": "Oxford Lane Capital Corp"
+  },
+  "ICMB": {
+    "cik": "1578348",
+    "name": "Investcorp Credit Management BDC"
+  },
+  "OFS": {
+    "cik": "1487918",
+    "name": "OFS Capital Corporation"
+  },
+  "KBDC": {
+    "cik": "1747172",
+    "name": "Kayne Anderson BDC Inc"
+  },
+  "BCSF": {
+    "cik": "1655050",
+    "name": "Bain Capital Specialty Finance Inc"
+  },
+  "MSIF": {
+    "cik": "1535778",
+    "name": "MSC Income Fund Inc"
+  },
+  "SSSS": {
+    "cik": "1509470",
+    "name": "SuRo Capital Corp"
+  },
+  "PFX": {
+    "cik": "1490349",
+    "name": "PhenixFIN Corporation"
+  },
+  "RAND": {
+    "cik": "81955",
+    "name": "Rand Capital Corporation"
+  }
+}
