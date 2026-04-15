@@ -179,4 +179,5 @@ A: 编辑`config/bdc_ciks.json`，添加新的CIK和公司信息。
 
 ## 联系方式
 
-如有问题，请提交Issue或联系项目维护者。
+如有问题，请提交Issue或联系项目维护者Frank:
+oleapfrank@gmail.com
