@@ -23,12 +23,9 @@ wheels/
 .installed.cfg
 *.egg
 
-# Data files - ignore all raw and parsed data
+# Data files - raw HTML files too large for GitHub (6.8GB)
 data/raw/**/*
-data/parsed/*.csv
-data/parsed/*.json
 !data/raw/.gitkeep
-!data/parsed/.gitkeep
 
 # IDE
 .vscode/

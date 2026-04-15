@@ -1,0 +1,677 @@
+{
+  "total_records": 73960,
+  "validation_time": "2026-04-15T22:21:03.486001",
+  "completeness": {
+    "cik": {
+      "missing_count": 0,
+      "missing_rate": 0.0,
+      "status": "PASS"
+    },
+    "bdc_name": {
+      "missing_count": 0,
+      "missing_rate": 0.0,
+      "status": "PASS"
+    },
+    "ticker": {
+      "missing_count": 0,
+      "missing_rate": 0.0,
+      "status": "PASS"
+    },
+    "filing_date": {
+      "missing_count": 0,
+      "missing_rate": 0.0,
+      "status": "PASS"
+    },
+    "borrower_name": {
+      "missing_count": 0,
+      "missing_rate": 0.0,
+      "status": "PASS"
+    },
+    "fair_value_usd_mn": {
+      "missing_count": 0,
+      "missing_rate": 0.0,
+      "status": "PASS"
+    }
+  },
+  "coverage": {
+    "TRIN": {
+      "expected_quarters": 20,
+      "actual_quarters": 15,
+      "coverage_rate": 75.0,
+      "missing_quarters": [
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4",
+        "2025-Q4"
+      ]
+    },
+    "MSIF": {
+      "expected_quarters": 20,
+      "actual_quarters": 12,
+      "coverage_rate": 60.0,
+      "missing_quarters": [
+        "2021-Q1",
+        "2021-Q2",
+        "2021-Q3",
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4",
+        "2025-Q4"
+      ]
+    },
+    "TSLX": {
+      "expected_quarters": 20,
+      "actual_quarters": 16,
+      "coverage_rate": 80.0,
+      "missing_quarters": [
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4"
+      ]
+    },
+    "PNNT": {
+      "expected_quarters": 20,
+      "actual_quarters": 12,
+      "coverage_rate": 60.0,
+      "missing_quarters": [
+        "2021-Q1",
+        "2021-Q2",
+        "2021-Q3",
+        "2022-Q3",
+        "2023-Q3",
+        "2024-Q3",
+        "2025-Q3",
+        "2025-Q4"
+      ]
+    },
+    "RWAY": {
+      "expected_quarters": 20,
+      "actual_quarters": 14,
+      "coverage_rate": 70.0,
+      "missing_quarters": [
+        "2021-Q1",
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4",
+        "2025-Q4"
+      ]
+    },
+    "NCDL": {
+      "expected_quarters": 20,
+      "actual_quarters": 15,
+      "coverage_rate": 75.0,
+      "missing_quarters": [
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4",
+        "2025-Q4"
+      ]
+    },
+    "TCPC": {
+      "expected_quarters": 20,
+      "actual_quarters": 16,
+      "coverage_rate": 80.0,
+      "missing_quarters": [
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4"
+      ]
+    },
+    "KBDC": {
+      "expected_quarters": 20,
+      "actual_quarters": 6,
+      "coverage_rate": 30.0,
+      "missing_quarters": [
+        "2021-Q3",
+        "2021-Q4",
+        "2022-Q1",
+        "2022-Q2",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q1",
+        "2024-Q2",
+        "2024-Q3",
+        "2024-Q4",
+        "2025-Q1",
+        "2025-Q2",
+        "2025-Q3",
+        "2025-Q4"
+      ]
+    },
+    "MAIN": {
+      "expected_quarters": 20,
+      "actual_quarters": 16,
+      "coverage_rate": 80.0,
+      "missing_quarters": [
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4"
+      ]
+    },
+    "NMFC": {
+      "expected_quarters": 20,
+      "actual_quarters": 15,
+      "coverage_rate": 75.0,
+      "missing_quarters": [
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4",
+        "2025-Q4"
+      ]
+    },
+    "PTMN": {
+      "expected_quarters": 20,
+      "actual_quarters": 14,
+      "coverage_rate": 70.0,
+      "missing_quarters": [
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q2",
+        "2024-Q4",
+        "2025-Q4"
+      ]
+    },
+    "OBDE": {
+      "expected_quarters": 20,
+      "actual_quarters": 12,
+      "coverage_rate": 60.0,
+      "missing_quarters": [
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4",
+        "2025-Q1",
+        "2025-Q2",
+        "2025-Q3",
+        "2025-Q4"
+      ]
+    },
+    "WHF": {
+      "expected_quarters": 20,
+      "actual_quarters": 15,
+      "coverage_rate": 75.0,
+      "missing_quarters": [
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4",
+        "2025-Q4"
+      ]
+    },
+    "FSIC": {
+      "expected_quarters": 20,
+      "actual_quarters": 16,
+      "coverage_rate": 80.0,
+      "missing_quarters": [
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4"
+      ]
+    },
+    "SCM": {
+      "expected_quarters": 20,
+      "actual_quarters": 14,
+      "coverage_rate": 70.0,
+      "missing_quarters": [
+        "2021-Q4",
+        "2022-Q1",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4",
+        "2025-Q4"
+      ]
+    },
+    "PFLT": {
+      "expected_quarters": 20,
+      "actual_quarters": 12,
+      "coverage_rate": 60.0,
+      "missing_quarters": [
+        "2021-Q1",
+        "2021-Q2",
+        "2021-Q3",
+        "2022-Q3",
+        "2023-Q3",
+        "2024-Q3",
+        "2025-Q3",
+        "2025-Q4"
+      ]
+    },
+    "GDLC": {
+      "expected_quarters": 20,
+      "actual_quarters": 2,
+      "coverage_rate": 10.0,
+      "missing_quarters": [
+        "2021-Q1",
+        "2021-Q2",
+        "2021-Q3",
+        "2021-Q4",
+        "2022-Q1",
+        "2022-Q2",
+        "2022-Q3",
+        "2022-Q4",
+        "2023-Q3",
+        "2023-Q4",
+        "2024-Q1",
+        "2024-Q2",
+        "2024-Q3",
+        "2024-Q4",
+        "2025-Q1",
+        "2025-Q2",
+        "2025-Q3",
+        "2025-Q4"
+      ]
+    },
+    "BCSF": {
+      "expected_quarters": 20,
+      "actual_quarters": 10,
+      "coverage_rate": 50.0,
+      "missing_quarters": [
+        "2021-Q1",
+        "2021-Q2",
+        "2021-Q4",
+        "2022-Q1",
+        "2022-Q2",
+        "2022-Q3",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4",
+        "2025-Q4"
+      ]
+    },
+    "GECC": {
+      "expected_quarters": 20,
+      "actual_quarters": 15,
+      "coverage_rate": 75.0,
+      "missing_quarters": [
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4",
+        "2025-Q4"
+      ]
+    },
+    "TPVG": {
+      "expected_quarters": 20,
+      "actual_quarters": 15,
+      "coverage_rate": 75.0,
+      "missing_quarters": [
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4",
+        "2025-Q4"
+      ]
+    },
+    "OBDC": {
+      "expected_quarters": 20,
+      "actual_quarters": 15,
+      "coverage_rate": 75.0,
+      "missing_quarters": [
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4",
+        "2025-Q4"
+      ]
+    },
+    "ICMB": {
+      "expected_quarters": 20,
+      "actual_quarters": 7,
+      "coverage_rate": 35.0,
+      "missing_quarters": [
+        "2021-Q1",
+        "2021-Q2",
+        "2021-Q3",
+        "2021-Q4",
+        "2022-Q1",
+        "2022-Q2",
+        "2022-Q3",
+        "2022-Q4",
+        "2023-Q1",
+        "2023-Q2",
+        "2024-Q2",
+        "2024-Q4",
+        "2025-Q4"
+      ]
+    },
+    "MRCC": {
+      "expected_quarters": 20,
+      "actual_quarters": 15,
+      "coverage_rate": 75.0,
+      "missing_quarters": [
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4",
+        "2025-Q4"
+      ]
+    },
+    "BXSL": {
+      "expected_quarters": 20,
+      "actual_quarters": 8,
+      "coverage_rate": 40.0,
+      "missing_quarters": [
+        "2021-Q1",
+        "2021-Q2",
+        "2021-Q3",
+        "2021-Q4",
+        "2022-Q1",
+        "2022-Q3",
+        "2022-Q4",
+        "2023-Q1",
+        "2023-Q2",
+        "2023-Q3",
+        "2023-Q4",
+        "2024-Q4"
+      ]
+    },
+    "HTGC": {
+      "expected_quarters": 20,
+      "actual_quarters": 15,
+      "coverage_rate": 75.0,
+      "missing_quarters": [
+        "2021-Q1",
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4"
+      ]
+    },
+    "MFIC": {
+      "expected_quarters": 20,
+      "actual_quarters": 11,
+      "coverage_rate": 55.0,
+      "missing_quarters": [
+        "2021-Q1",
+        "2021-Q2",
+        "2021-Q4",
+        "2022-Q1",
+        "2022-Q2",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4",
+        "2025-Q4"
+      ]
+    },
+    "OBDC2": {
+      "expected_quarters": 20,
+      "actual_quarters": 15,
+      "coverage_rate": 75.0,
+      "missing_quarters": [
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4",
+        "2025-Q4"
+      ]
+    },
+    "ARCC": {
+      "expected_quarters": 20,
+      "actual_quarters": 10,
+      "coverage_rate": 50.0,
+      "missing_quarters": [
+        "2021-Q1",
+        "2021-Q2",
+        "2021-Q3",
+        "2021-Q4",
+        "2022-Q1",
+        "2022-Q2",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4",
+        "2025-Q4"
+      ]
+    },
+    "GBDC": {
+      "expected_quarters": 20,
+      "actual_quarters": 5,
+      "coverage_rate": 25.0,
+      "missing_quarters": [
+        "2021-Q1",
+        "2021-Q2",
+        "2021-Q3",
+        "2021-Q4",
+        "2022-Q1",
+        "2022-Q2",
+        "2022-Q3",
+        "2022-Q4",
+        "2023-Q1",
+        "2023-Q2",
+        "2023-Q3",
+        "2023-Q4",
+        "2024-Q1",
+        "2024-Q2",
+        "2024-Q3"
+      ]
+    },
+    "CGBD": {
+      "expected_quarters": 20,
+      "actual_quarters": 15,
+      "coverage_rate": 75.0,
+      "missing_quarters": [
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4",
+        "2025-Q4"
+      ]
+    },
+    "LRFC": {
+      "expected_quarters": 20,
+      "actual_quarters": 9,
+      "coverage_rate": 45.0,
+      "missing_quarters": [
+        "2021-Q1",
+        "2021-Q2",
+        "2021-Q4",
+        "2022-Q1",
+        "2022-Q2",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4",
+        "2025-Q2",
+        "2025-Q3",
+        "2025-Q4"
+      ]
+    },
+    "FDUS": {
+      "expected_quarters": 20,
+      "actual_quarters": 15,
+      "coverage_rate": 75.0,
+      "missing_quarters": [
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4",
+        "2025-Q4"
+      ]
+    },
+    "OFS": {
+      "expected_quarters": 20,
+      "actual_quarters": 15,
+      "coverage_rate": 75.0,
+      "missing_quarters": [
+        "2021-Q4",
+        "2022-Q4",
+        "2023-Q4",
+        "2024-Q4",
+        "2025-Q4"
+      ]
+    },
+    "SLRC": {
+      "expected_quarters": 20,
+      "actual_quarters": 5,
+      "coverage_rate": 25.0,
+      "missing_quarters": [
+        "2021-Q1",
+        "2021-Q2",
+        "2021-Q3",
+        "2021-Q4",
+        "2022-Q1",
+        "2022-Q4",
+        "2023-Q3",
+        "2023-Q4",
+        "2024-Q2",
+        "2024-Q3",
+        "2024-Q4",
+        "2025-Q1",
+        "2025-Q2",
+        "2025-Q3",
+        "2025-Q4"
+      ]
+    },
+    "SSSS": {
+      "expected_quarters": 20,
+      "actual_quarters": 10,
+      "coverage_rate": 50.0,
+      "missing_quarters": [
+        "2021-Q4",
+        "2022-Q3",
+        "2022-Q4",
+        "2023-Q1",
+        "2023-Q2",
+        "2023-Q4",
+        "2024-Q2",
+        "2024-Q4",
+        "2025-Q3",
+        "2025-Q4"
+      ]
+    },
+    "PSEC": {
+      "expected_quarters": 20,
+      "actual_quarters": 17,
+      "coverage_rate": 85.0,
+      "missing_quarters": [
+        "2021-Q2",
+        "2022-Q2",
+        "2023-Q2",
+        "2024-Q2"
+      ]
+    },
+    "CSWC": {
+      "expected_quarters": 20,
+      "actual_quarters": 15,
+      "coverage_rate": 75.0,
+      "missing_quarters": [
+        "2021-Q1",
+        "2022-Q1",
+        "2023-Q1",
+        "2024-Q1",
+        "2025-Q1",
+        "2025-Q4"
+      ]
+    },
+    "SAR": {
+      "expected_quarters": 20,
+      "actual_quarters": 12,
+      "coverage_rate": 60.0,
+      "missing_quarters": [
+        "2021-Q1",
+        "2021-Q3",
+        "2022-Q1",
+        "2022-Q4",
+        "2023-Q1",
+        "2023-Q4",
+        "2024-Q1",
+        "2025-Q1",
+        "2025-Q4"
+      ]
+    },
+    "OCSL": {
+      "expected_quarters": 20,
+      "actual_quarters": 15,
+      "coverage_rate": 75.0,
+      "missing_quarters": [
+        "2021-Q3",
+        "2022-Q3",
+        "2023-Q3",
+        "2024-Q3",
+        "2025-Q3",
+        "2025-Q4"
+      ]
+    }
+  },
+  "data_quality": {
+    "fair_value_usd_mn": {
+      "min": 0.11,
+      "max": 280464610.0,
+      "mean": 95074.87538034073,
+      "median": 1371.0,
+      "negative_count": 0
+    },
+    "cost_basis_usd_mn": {
+      "min": -3202461.0,
+      "max": 414994863.0,
+      "mean": 680100.6763163159,
+      "median": 4350.0,
+      "negative_count": 267
+    },
+    "position_size_usd_mn": {
+      "min": -505099.0,
+      "max": 720108628.0,
+      "mean": 1680366.792382071,
+      "median": 6995.0,
+      "negative_count": 1060
+    },
+    "borrower_deduplication": {
+      "unique_borrowers": 8570,
+      "total_records": 73960,
+      "duplication_rate": 88.41
+    }
+  },
+  "anomalies": {
+    "negative_fair_value": {
+      "count": 0,
+      "examples": []
+    },
+    "large_fv_cost_deviation": {
+      "count": 24991,
+      "examples": [
+        {
+          "ticker": "TRIN",
+          "borrower_name": "STS Media, Inc. (11)",
+          "fair_value_usd_mn": 100.0,
+          "cost_basis_usd_mn": 737.0
+        },
+        {
+          "ticker": "TRIN",
+          "borrower_name": "Project Frog, Inc. (17)",
+          "fair_value_usd_mn": 3.0,
+          "cost_basis_usd_mn": 18.0
+        },
+        {
+          "ticker": "TRIN",
+          "borrower_name": "Yellowbrick Education, Inc.",
+          "fair_value_usd_mn": 582.0,
+          "cost_basis_usd_mn": 120.0
+        },
+        {
+          "ticker": "TRIN",
+          "borrower_name": "DailyPay, Inc.",
+          "fair_value_usd_mn": 268.0,
+          "cost_basis_usd_mn": 151.0
+        },
+        {
+          "ticker": "TRIN",
+          "borrower_name": "Petal Card, Inc.",
+          "fair_value_usd_mn": 394.0,
+          "cost_basis_usd_mn": 147.0
+        }
+      ]
+    },
+    "missing_interest_rate": {
+      "count": 26719,
+      "rate": 36.13
+    }
+  }
+}
