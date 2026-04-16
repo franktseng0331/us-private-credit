@@ -355,26 +355,47 @@ class BDCDataCleaner:
         return self
 
     def step3_normalize_units(self):
-        """步骤3: 金额单位统一（按 BDC + filing_id 分组）"""
+        """步骤3: 金额单位统一（按 BDC + filing_id 分组）
+
+        Bug fix (2026-04-16): 改进单位检测逻辑
+        原因: 原阈值5000导致部分千美元/美元单位财报未转换，造成数据膨胀
+        新逻辑:
+        - max > 100000 → 美元单位（如TCPC的280M实际是280,464,610美元）
+        - median > 100 → 千美元单位
+        - median < 0.01 → 美元单位
+        """
         print("\n步骤3: 金额单位统一...")
 
         conversion_log = []
 
         # 按 BDC + filing_id 分组
         for (cik, filing_id), group in self.df.groupby(['cik', 'filing_id']):
-            # 计算该份财报的 fair_value 中位数
+            # 计算该份财报的 fair_value 统计量
             fv_median = group['fair_value_usd_mn'].median()
+            fv_max = group['fair_value_usd_mn'].max()
+            fv_75th = group['fair_value_usd_mn'].quantile(0.75)
 
             if pd.isna(fv_median):
                 continue
 
-            # 判断单位
-            if fv_median > 5000:
-                # 千美元 → 百万美元
+            # 判断单位（改进后的逻辑）
+            # 规则1: max > 100000 → 美元
+            # 极端大值说明单位是美元（如TCPC max=280,464,610美元=280M）
+            if fv_max > 100000:
+                factor = 1_000_000
+                unit = 'dollars'
+            # 规则2: 75th percentile > 1000 → 千美元
+            # 大部分值都很大，说明单位是千美元
+            elif fv_75th > 1000:
                 factor = 1000
                 unit = 'thousands'
-            elif fv_median < 0.1:
-                # 美元 → 百万美元
+            # 规则3: median > 100 → 千美元
+            # 正常情况下单笔投资0.5M-100M，median > 100说明单位是千美元
+            elif fv_median > 100:
+                factor = 1000
+                unit = 'thousands'
+            # 规则4: median < 0.01 → 美元
+            elif fv_median < 0.01:
                 factor = 1_000_000
                 unit = 'dollars'
             else:
@@ -392,6 +413,7 @@ class BDCDataCleaner:
                 'filing_id': filing_id,
                 'original_unit': unit,
                 'median_before': float(fv_median),
+                'max_before': float(fv_max),
                 'conversion_factor': factor,
                 'records_affected': int(mask.sum())
             })
