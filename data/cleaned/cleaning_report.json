@@ -1,0 +1,632 @@
+{
+  "cleaning_date": "2026-04-16T09:05:58.444644",
+  "input_file": "data/parsed/deal_positions.csv",
+  "output_file": "data/cleaned/deal_positions_clean.csv",
+  "total_records": 73960,
+  "total_columns": 33,
+  "new_columns": [
+    "investment_type_std",
+    "industry_clean",
+    "industry_gics",
+    "borrower_name_clean",
+    "maturity_date",
+    "spread_bps",
+    "pik_spread_bps",
+    "is_anomaly",
+    "is_unfunded_liability"
+  ],
+  "statistics": {
+    "step1_investment_type": {
+      "total_records": 73960,
+      "unknown_count": 4447,
+      "unknown_percentage": 6.01,
+      "type_distribution": {
+        "First Lien Term Loan": 23256,
+        "Common Equity": 14561,
+        "Senior Secured Loan": 10628,
+        "Preferred Equity": 7069,
+        "Warrant": 4646,
+        "Unknown": 4447,
+        "Second Lien Term Loan": 2937,
+        "First Lien Delayed Draw": 2876,
+        "Subordinated Debt": 1656,
+        "First Lien Revolver": 815,
+        "Revolver": 788,
+        "Structured Finance / CLO": 208,
+        "Unsecured Note": 67,
+        "Unitranche Loan": 6
+      }
+    },
+    "step2_industry": {
+      "total_records": 73960,
+      "valid_count": 11176,
+      "valid_percentage": 15.11,
+      "gics_distribution": {
+        "Other / Unknown": 62860,
+        "Software & Technology": 2332,
+        "Industrials": 1992,
+        "Healthcare": 1770,
+        "Consumer": 1234,
+        "Structured Finance": 1059,
+        "Business Services": 866,
+        "Financial Services": 844,
+        "Media & Telecom": 630,
+        "Real Estate": 167,
+        "Energy": 109,
+        "Education": 97
+      }
+    },
+    "step3_unit_conversion": {
+      "total_conversions": 68,
+      "conversion_log": [
+        {
+          "cik": 17313,
+          "filing_id": "0000017313-25-000076",
+          "original_unit": "thousands",
+          "median_before": 5500.0,
+          "conversion_factor": 1000,
+          "records_affected": 258
+        },
+        {
+          "cik": 17313,
+          "filing_id": "0000017313-25-000146",
+          "original_unit": "thousands",
+          "median_before": 6094.0,
+          "conversion_factor": 1000,
+          "records_affected": 261
+        },
+        {
+          "cik": 1278752,
+          "filing_id": "0000950170-25-069131",
+          "original_unit": "thousands",
+          "median_before": 5895.0,
+          "conversion_factor": 1000,
+          "records_affected": 595
+        },
+        {
+          "cik": 1278752,
+          "filing_id": "0000950170-25-106526",
+          "original_unit": "thousands",
+          "median_before": 6176.0,
+          "conversion_factor": 1000,
+          "records_affected": 601
+        },
+        {
+          "cik": 1278752,
+          "filing_id": "0001193125-25-269512",
+          "original_unit": "thousands",
+          "median_before": 6334.0,
+          "conversion_factor": 1000,
+          "records_affected": 598
+        },
+        {
+          "cik": 1280784,
+          "filing_id": "0001280784-23-000008",
+          "original_unit": "thousands",
+          "median_before": 19983.0,
+          "conversion_factor": 1000,
+          "records_affected": 92
+        },
+        {
+          "cik": 1280784,
+          "filing_id": "0001280784-24-000014",
+          "original_unit": "thousands",
+          "median_before": 20549.0,
+          "conversion_factor": 1000,
+          "records_affected": 102
+        },
+        {
+          "cik": 1280784,
+          "filing_id": "0001280784-24-000020",
+          "original_unit": "thousands",
+          "median_before": 21133.5,
+          "conversion_factor": 1000,
+          "records_affected": 102
+        },
+        {
+          "cik": 1280784,
+          "filing_id": "0001280784-24-000026",
+          "original_unit": "thousands",
+          "median_before": 22456.5,
+          "conversion_factor": 1000,
+          "records_affected": 106
+        },
+        {
+          "cik": 1280784,
+          "filing_id": "0001280784-25-000022",
+          "original_unit": "thousands",
+          "median_before": 25048.0,
+          "conversion_factor": 1000,
+          "records_affected": 121
+        },
+        {
+          "cik": 1280784,
+          "filing_id": "0001280784-25-000032",
+          "original_unit": "thousands",
+          "median_before": 24747.0,
+          "conversion_factor": 1000,
+          "records_affected": 123
+        },
+        {
+          "cik": 1280784,
+          "filing_id": "0001280784-25-000041",
+          "original_unit": "thousands",
+          "median_before": 25264.0,
+          "conversion_factor": 1000,
+          "records_affected": 125
+        },
+        {
+          "cik": 1280784,
+          "filing_id": "0001280784-26-000009",
+          "original_unit": "thousands",
+          "median_before": 25608.0,
+          "conversion_factor": 1000,
+          "records_affected": 125
+        },
+        {
+          "cik": 1372807,
+          "filing_id": "0000950170-21-003075",
+          "original_unit": "thousands",
+          "median_before": 2475000.0,
+          "conversion_factor": 1000,
+          "records_affected": 297
+        },
+        {
+          "cik": 1372807,
+          "filing_id": "0001564590-21-025084",
+          "original_unit": "thousands",
+          "median_before": 2443529.5,
+          "conversion_factor": 1000,
+          "records_affected": 284
+        },
+        {
+          "cik": 1372807,
+          "filing_id": "0001564590-21-041632",
+          "original_unit": "thousands",
+          "median_before": 2433642.0,
+          "conversion_factor": 1000,
+          "records_affected": 298
+        },
+        {
+          "cik": 1383414,
+          "filing_id": "0000950170-22-000974",
+          "original_unit": "thousands",
+          "median_before": 1624567.0,
+          "conversion_factor": 1000,
+          "records_affected": 21
+        },
+        {
+          "cik": 1414932,
+          "filing_id": "0001414932-21-000004",
+          "original_unit": "thousands",
+          "median_before": 5974.0,
+          "conversion_factor": 1000,
+          "records_affected": 508
+        },
+        {
+          "cik": 1414932,
+          "filing_id": "0001414932-21-000008",
+          "original_unit": "thousands",
+          "median_before": 5683.0,
+          "conversion_factor": 1000,
+          "records_affected": 624
+        },
+        {
+          "cik": 1414932,
+          "filing_id": "0001414932-21-000015",
+          "original_unit": "thousands",
+          "median_before": 5781.0,
+          "conversion_factor": 1000,
+          "records_affected": 617
+        },
+        {
+          "cik": 1414932,
+          "filing_id": "0001414932-22-000004",
+          "original_unit": "thousands",
+          "median_before": 5872.0,
+          "conversion_factor": 1000,
+          "records_affected": 557
+        },
+        {
+          "cik": 1414932,
+          "filing_id": "0001414932-22-000007",
+          "original_unit": "thousands",
+          "median_before": 5921.0,
+          "conversion_factor": 1000,
+          "records_affected": 555
+        },
+        {
+          "cik": 1414932,
+          "filing_id": "0001414932-22-000011",
+          "original_unit": "thousands",
+          "median_before": 5884.0,
+          "conversion_factor": 1000,
+          "records_affected": 555
+        },
+        {
+          "cik": 1414932,
+          "filing_id": "0001414932-23-000005",
+          "original_unit": "thousands",
+          "median_before": 5028.0,
+          "conversion_factor": 1000,
+          "records_affected": 607
+        },
+        {
+          "cik": 1418076,
+          "filing_id": "0001193125-22-210087",
+          "original_unit": "thousands",
+          "median_before": 125000.0,
+          "conversion_factor": 1000,
+          "records_affected": 3
+        },
+        {
+          "cik": 1418076,
+          "filing_id": "0001193125-22-275831",
+          "original_unit": "thousands",
+          "median_before": 70261.0,
+          "conversion_factor": 1000,
+          "records_affected": 2
+        },
+        {
+          "cik": 1418076,
+          "filing_id": "0001193125-23-140710",
+          "original_unit": "thousands",
+          "median_before": 70462.0,
+          "conversion_factor": 1000,
+          "records_affected": 4
+        },
+        {
+          "cik": 1418076,
+          "filing_id": "0001193125-23-206195",
+          "original_unit": "thousands",
+          "median_before": 20104.0,
+          "conversion_factor": 1000,
+          "records_affected": 3
+        },
+        {
+          "cik": 1418076,
+          "filing_id": "0001193125-24-134205",
+          "original_unit": "thousands",
+          "median_before": 69677.0,
+          "conversion_factor": 1000,
+          "records_affected": 4
+        },
+        {
+          "cik": 1476765,
+          "filing_id": "0001476765-25-000016",
+          "original_unit": "thousands",
+          "median_before": 7268.0,
+          "conversion_factor": 1000,
+          "records_affected": 20
+        },
+        {
+          "cik": 1476765,
+          "filing_id": "0001476765-25-000040",
+          "original_unit": "thousands",
+          "median_before": 6788.0,
+          "conversion_factor": 1000,
+          "records_affected": 21
+        },
+        {
+          "cik": 1476765,
+          "filing_id": "0001476765-25-000076",
+          "original_unit": "thousands",
+          "median_before": 6788.0,
+          "conversion_factor": 1000,
+          "records_affected": 21
+        },
+        {
+          "cik": 1476765,
+          "filing_id": "0001476765-25-000096",
+          "original_unit": "thousands",
+          "median_before": 6947.0,
+          "conversion_factor": 1000,
+          "records_affected": 21
+        },
+        {
+          "cik": 1476765,
+          "filing_id": "0001476765-26-000012",
+          "original_unit": "thousands",
+          "median_before": 6947.0,
+          "conversion_factor": 1000,
+          "records_affected": 13
+        },
+        {
+          "cik": 1504619,
+          "filing_id": "0000950170-22-000969",
+          "original_unit": "thousands",
+          "median_before": 2434333.0,
+          "conversion_factor": 1000,
+          "records_affected": 37
+        },
+        {
+          "cik": 1508655,
+          "filing_id": "0000950170-23-018777",
+          "original_unit": "thousands",
+          "median_before": 22645.0,
+          "conversion_factor": 1000,
+          "records_affected": 90
+        },
+        {
+          "cik": 1508655,
+          "filing_id": "0000950170-23-038066",
+          "original_unit": "thousands",
+          "median_before": 19147.0,
+          "conversion_factor": 1000,
+          "records_affected": 221
+        },
+        {
+          "cik": 1508655,
+          "filing_id": "0000950170-23-058321",
+          "original_unit": "thousands",
+          "median_before": 21345.0,
+          "conversion_factor": 1000,
+          "records_affected": 135
+        },
+        {
+          "cik": 1508655,
+          "filing_id": "0000950170-24-088524",
+          "original_unit": "thousands",
+          "median_before": 29561.5,
+          "conversion_factor": 1000,
+          "records_affected": 68
+        },
+        {
+          "cik": 1508655,
+          "filing_id": "0000950170-24-121434",
+          "original_unit": "thousands",
+          "median_before": 28522.5,
+          "conversion_factor": 1000,
+          "records_affected": 60
+        },
+        {
+          "cik": 1544206,
+          "filing_id": "0001544206-23-000043",
+          "original_unit": "thousands",
+          "median_before": 5399.15,
+          "conversion_factor": 1000,
+          "records_affected": 16
+        },
+        {
+          "cik": 1544206,
+          "filing_id": "0001544206-23-000062",
+          "original_unit": "thousands",
+          "median_before": 5399.15,
+          "conversion_factor": 1000,
+          "records_affected": 16
+        },
+        {
+          "cik": 1544206,
+          "filing_id": "0001544206-23-000077",
+          "original_unit": "thousands",
+          "median_before": 5399.15,
+          "conversion_factor": 1000,
+          "records_affected": 16
+        },
+        {
+          "cik": 1544206,
+          "filing_id": "0001544206-24-000036",
+          "original_unit": "thousands",
+          "median_before": 13263.0,
+          "conversion_factor": 1000,
+          "records_affected": 18
+        },
+        {
+          "cik": 1544206,
+          "filing_id": "0001544206-24-000054",
+          "original_unit": "thousands",
+          "median_before": 13263.0,
+          "conversion_factor": 1000,
+          "records_affected": 18
+        },
+        {
+          "cik": 1544206,
+          "filing_id": "0001544206-24-000067",
+          "original_unit": "thousands",
+          "median_before": 13263.0,
+          "conversion_factor": 1000,
+          "records_affected": 18
+        },
+        {
+          "cik": 1578348,
+          "filing_id": "0000950170-23-062921",
+          "original_unit": "thousands",
+          "median_before": 1515352.21,
+          "conversion_factor": 1000,
+          "records_affected": 8
+        },
+        {
+          "cik": 1578348,
+          "filing_id": "0000950170-25-070774",
+          "original_unit": "thousands",
+          "median_before": 3935838.0,
+          "conversion_factor": 1000,
+          "records_affected": 35
+        },
+        {
+          "cik": 1578348,
+          "filing_id": "0000950170-25-107482",
+          "original_unit": "thousands",
+          "median_before": 4716250.0,
+          "conversion_factor": 1000,
+          "records_affected": 35
+        },
+        {
+          "cik": 1578348,
+          "filing_id": "0001193125-25-277953",
+          "original_unit": "thousands",
+          "median_before": 3903532.5,
+          "conversion_factor": 1000,
+          "records_affected": 18
+        },
+        {
+          "cik": 1580345,
+          "filing_id": "0001580345-21-000020",
+          "original_unit": "thousands",
+          "median_before": 5092.0,
+          "conversion_factor": 1000,
+          "records_affected": 153
+        },
+        {
+          "cik": 1580345,
+          "filing_id": "0001580345-21-000026",
+          "original_unit": "thousands",
+          "median_before": 5059.0,
+          "conversion_factor": 1000,
+          "records_affected": 151
+        },
+        {
+          "cik": 1580345,
+          "filing_id": "0001580345-21-000030",
+          "original_unit": "thousands",
+          "median_before": 5736.5,
+          "conversion_factor": 1000,
+          "records_affected": 158
+        },
+        {
+          "cik": 1653384,
+          "filing_id": "0000950170-22-014739",
+          "original_unit": "thousands",
+          "median_before": 1027312.0,
+          "conversion_factor": 1000,
+          "records_affected": 3
+        },
+        {
+          "cik": 1653384,
+          "filing_id": "0000950170-22-021922",
+          "original_unit": "thousands",
+          "median_before": 952033.0,
+          "conversion_factor": 1000,
+          "records_affected": 3
+        },
+        {
+          "cik": 1653384,
+          "filing_id": "0001558370-21-010525",
+          "original_unit": "thousands",
+          "median_before": 996860.0,
+          "conversion_factor": 1000,
+          "records_affected": 2
+        },
+        {
+          "cik": 1653384,
+          "filing_id": "0001558370-21-014567",
+          "original_unit": "thousands",
+          "median_before": 796384.5,
+          "conversion_factor": 1000,
+          "records_affected": 2
+        },
+        {
+          "cik": 1653384,
+          "filing_id": "0001558370-22-007385",
+          "original_unit": "thousands",
+          "median_before": 1027436.5,
+          "conversion_factor": 1000,
+          "records_affected": 4
+        },
+        {
+          "cik": 1655050,
+          "filing_id": "0000950170-23-039862",
+          "original_unit": "thousands",
+          "median_before": 5310.0,
+          "conversion_factor": 1000,
+          "records_affected": 801
+        },
+        {
+          "cik": 1655050,
+          "filing_id": "0000950170-23-059452",
+          "original_unit": "thousands",
+          "median_before": 5276.0,
+          "conversion_factor": 1000,
+          "records_affected": 806
+        },
+        {
+          "cik": 1655050,
+          "filing_id": "0000950170-24-053555",
+          "original_unit": "thousands",
+          "median_before": 5004.0,
+          "conversion_factor": 1000,
+          "records_affected": 838
+        },
+        {
+          "cik": 1655050,
+          "filing_id": "0000950170-24-091840",
+          "original_unit": "thousands",
+          "median_before": 5171.0,
+          "conversion_factor": 1000,
+          "records_affected": 845
+        },
+        {
+          "cik": 1655050,
+          "filing_id": "0000950170-24-121464",
+          "original_unit": "thousands",
+          "median_before": 5398.0,
+          "conversion_factor": 1000,
+          "records_affected": 886
+        },
+        {
+          "cik": 1655050,
+          "filing_id": "0001558370-23-008867",
+          "original_unit": "thousands",
+          "median_before": 5104.0,
+          "conversion_factor": 1000,
+          "records_affected": 803
+        },
+        {
+          "cik": 1675033,
+          "filing_id": "0001564590-21-025295",
+          "original_unit": "thousands",
+          "median_before": 16120.0,
+          "conversion_factor": 1000,
+          "records_affected": 3
+        },
+        {
+          "cik": 1675033,
+          "filing_id": "0001564590-21-039944",
+          "original_unit": "thousands",
+          "median_before": 12624.0,
+          "conversion_factor": 1000,
+          "records_affected": 3
+        },
+        {
+          "cik": 1675033,
+          "filing_id": "0001564590-21-054728",
+          "original_unit": "thousands",
+          "median_before": 8175.0,
+          "conversion_factor": 1000,
+          "records_affected": 2
+        },
+        {
+          "cik": 1868878,
+          "filing_id": "0001868878-23-000028",
+          "original_unit": "thousands",
+          "median_before": 5200.0,
+          "conversion_factor": 1000,
+          "records_affected": 3
+        }
+      ]
+    },
+    "step4_negative_values": {
+      "unfunded_liability_count": 0,
+      "anomaly_count": 1326,
+      "negative_fair_value": 0,
+      "negative_cost_basis": 267,
+      "negative_position_size": 1060
+    },
+    "step5_date_parsing": {
+      "total_debt_records": 47684,
+      "parsed_count": 42922,
+      "parse_rate_percentage": 90.01
+    },
+    "step6_interest_rate": {
+      "base_rate_valid_count": 41529,
+      "spread_extracted_count": 17233,
+      "pik_extracted_count": 3418,
+      "pik_is_pik_corrected": 0
+    },
+    "step7_borrower_name": {
+      "unique_original": 8570,
+      "unique_clean": 7726,
+      "reduction_percentage": 9.85
+    }
+  }
+}
