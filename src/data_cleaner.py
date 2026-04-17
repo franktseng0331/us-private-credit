@@ -553,10 +553,10 @@ class BDCDataCleaner:
 
             return ''
 
-        def extract_spread_bps(rate_str: str) -> int:
-            """提取总利差（基点）"""
+        def extract_spread_bps(rate_str: str) -> float:
+            """提取总利差（基点），无法提取返回 np.nan 以区分零利差"""
             if pd.isna(rate_str):
-                return 0
+                return np.nan
 
             rate_str = str(rate_str)
 
@@ -567,9 +567,9 @@ class BDCDataCleaner:
                 unit = match.group(2).lower()
                 if unit == '%':
                     value *= 100  # 转换为基点
-                return int(value)
+                return float(value)
 
-            return 0
+            return np.nan
 
         def extract_pik_spread_bps(rate_str: str):
             """提取 PIK 利差（基点），无 PIK 返回 np.nan 以区分零利差"""

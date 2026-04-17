@@ -187,3 +187,59 @@ self.df['is_expired'] = maturity_parsed.notna() & (maturity_parsed < today)
 | 回填未调用 | industry有效率偏低 | run_cleaning.py | 回填1,516条，有效率17.45% |
 | 缺少is_expired | 无到期状态字段 | data_cleaner.py step5 | 新增字段，15,421条到期 |
 | PIK返回0 | 统计分析偏差 | data_cleaner.py | NaN正确区分缺失vs零值 |
+
+---
+
+# v1.2 数据质量修复 (2026-04-17)
+
+## Bug 6 — spread_bps 返回 0 而非 NaN（虚假零值污染）
+
+**根因**: `extract_spread_bps()` 在两种情况下返回 `0`：
+1. 输入为 NaN（无利率字段）
+2. 正则表达式未匹配（利率格式不含 `+XXXbps` 模式）
+
+导致 54,911 条（76.6%）记录被错误标记为零利差，无法区分"真实零利差"（固定利率贷款）与"数据缺失/提取失败"（权益类投资、格式不兼容）。
+
+**影响**:
+- `spread_bps` 列类型为 `int64`，无法存储 NaN
+- 54,911 条虚假零值污染均值、分布等统计分析
+- 与已修复的 `pik_spread_bps` 语义不一致
+
+**修复**: 将 `extract_spread_bps()` 对齐 `extract_pik_spread_bps()` 的处理方式：
+
+```python
+# 修复前
+def extract_spread_bps(rate_str: str) -> int:
+    if pd.isna(rate_str):
+        return 0
+    ...
+    return int(value)
+    return 0
+
+# 修复后
+def extract_spread_bps(rate_str: str) -> float:
+    """提取总利差（基点），无法提取返回 np.nan 以区分零利差"""
+    if pd.isna(rate_str):
+        return np.nan
+    ...
+    return float(value)
+    return np.nan
+```
+
+**修改文件**: `src/data_cleaner.py` 第 556–572 行
+
+**效果**:
+
+| 指标 | 修复前 | 修复后 |
+|------|--------|--------|
+| 列类型 | `int64` | `float64` |
+| 虚假零值记录数 | 54,911 | 19（真实零利差） |
+| NaN 记录数 | 0 | 54,892 |
+| 有效记录数（>0） | 16,776 | 16,776（不变） |
+| `spread_bps` 有效率 | 100%（含虚假零值） | 23.4%（真实有效） |
+
+## v1.2 修复汇总
+
+| Bug | 影响 | 修复文件 | 效果 |
+|-----|------|----------|------|
+| spread_bps返回0 | 54,911条虚假零值 | data_cleaner.py step6 | NaN正确区分缺失vs零值，有效率23.4% |

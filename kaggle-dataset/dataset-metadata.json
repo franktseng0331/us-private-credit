@@ -1,0 +1,25 @@
+{
+  "title": "US Private Credit: BDC Investment Data (2021-2025)",
+  "id": "frank970331/us-private-credit-bdc-data",
+  "licenses": [
+    {
+      "name": "MIT"
+    }
+  ],
+  "keywords": [
+    "finance",
+    "private credit",
+    "investment",
+    "SEC",
+    "business development company",
+    "leveraged loans",
+    "middle market",
+    "credit analysis"
+  ],
+  "collaborators": [],
+  "data": [
+    {
+      "description": "Cleaned BDC investment data with 73,960 records and 33 fields"
+    }
+  ]
+}

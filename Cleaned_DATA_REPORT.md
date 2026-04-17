@@ -106,7 +106,7 @@ elif fv_median < 0.001:
 | `investment_type_std` | 100% | 标准化投资类型 |
 | `is_expired` | 100% | 是否已到期（布尔） |
 | `industry_clean` | 17.5% | 行业分类（受限于原始数据） |
-| `spread_bps` | 23.4% | 利差（基点） |
+| `spread_bps` | 23.4% | 利差（基点，NaN 表示无利差或提取失败） |
 | `pik_spread_bps` | 4.7% | PIK 利差（NaN 表示无 PIK） |
 
 ### 3.3 金额统计（排除聚合行异常值）
@@ -193,6 +193,11 @@ pik_deals = df_clean[df_clean['pik_spread_bps'].notna()]
 ---
 
 ## 6. 更新日志
+
+### v1.2 (2026-04-17)
+- ✅ 修复 `spread_bps` 利差：提取失败时返回 NaN（而非 0），与 `pik_spread_bps` 语义一致
+- ✅ `spread_bps` 列类型从 `int64` 升级为 `float64`，虚假零值从 54,911 条降至 19 条（真实零利差）
+- ✅ 有效利差记录（>0）保持 16,776 条不变
 
 ### v1.1 (2026-04-17)
 - ✅ 新增去重步骤（step0），移除 2,273 条重复记录
