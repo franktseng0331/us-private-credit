@@ -186,12 +186,13 @@ class SimpleParser:
                         pass
 
             # 公允价值（最后几列中的数字）
+            # v1.4 修复: val >= 0 允许 $0 FV（unfunded revolver/delayed draw commitments）
             fair_value = None
             for cell in reversed(cell_texts[-5:]):
                 if cell and self._is_numeric(cell):
                     try:
-                        val = float(cell.replace(',', ''))
-                        if val > 0.1:
+                        val = float(cell.replace(',', '').replace('(', '-').replace(')', ''))
+                        if val >= 0:
                             fair_value = cell
                             break
                     except:
@@ -215,9 +216,13 @@ class SimpleParser:
             is_amended = bool(filing_id and ('/A' in filing_id or filing_id.endswith('-A')))
 
             # 如果找到了关键信息，创建记录
-            if current_company and investment_type and fair_value:
+            # v1.4 修复: fair_value is not None or position_size 允许 FV=0 的 Revolver/DD 行
+            if current_company and investment_type and (fair_value is not None or position_size_raw):
                 # 提取季度信息
                 quarter = self._extract_quarter(metadata.get('period_of_report', ''))
+
+                # FV=0 的 unfunded commitment 行：fair_value 解析为 0.0
+                fv_parsed = self._parse_fair_value(fair_value) if fair_value is not None else 0.0
 
                 record = {
                     # BDC信息
@@ -242,8 +247,8 @@ class SimpleParser:
                     # 财务数据
                     'position_size_usd_mn': self._parse_fair_value(position_size_raw),
                     'cost_basis_usd_mn': self._parse_fair_value(cost_basis_raw),
-                    'fair_value_raw': fair_value,
-                    'fair_value_usd_mn': self._parse_fair_value(fair_value),
+                    'fair_value_raw': fair_value or '0',
+                    'fair_value_usd_mn': fv_parsed,
                     # 元数据
                     'data_source': 'HTML',
                     'filing_id': filing_id,

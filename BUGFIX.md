@@ -404,3 +404,135 @@ if any(kw in raw_lower for kw in ['convertible note', 'convertible bond',
 | PIK 正则格式漏匹配 | P1-A | ~150 条 PIK 未识别 | data_cleaner.py step6 | PIK 有效记录 3,379→3,529 |
 | LIBOR 退出后未重标 | P2-A | 无法区分 LIBOR/SOFR | data_cleaner.py step6 | 新增 base_rate_clean，955 条 SOFR_legacy |
 | Unknown 类型覆盖不足 | P2-B | 4,334 条未分类 | data_cleaner.py step1 | Unknown 降至 3,828（-506） |
+
+---
+
+# v1.4 数据质量修复 (2026-04-17)
+
+## Bug 12 (P0) — `is_unfunded_liability` 恒为 False（双层 Bug）
+
+### 问题描述
+
+数据集中所有 424+ 条 Revolver/Delayed Draw 记录的 `is_unfunded_liability` 均为 False，unfunded commitment 信息完全丢失。
+
+### 根本原因（双层 Bug）
+
+**Layer 1 — Parser 过滤（根本原因）**: `src/simple_parser.py` 中硬编码 `val > 0.1` 阈值，过滤了所有 FV=$0 的 unfunded revolver/delayed draw 行。加之记录创建条件 `if ... and fair_value:` — `fair_value` 为 None 时整行跳过。结果：所有 unfunded revolver（SEC HTML 表中 FV=$0, commitment>0）在解析阶段被整行丢弃，清洗器从未见过这些行。
+
+**Layer 2 — Cleaner 条件（次要）**: `src/data_cleaner.py` Rule 1 检查 `fair_value_usd_mn < 0`，但即使修复 parser 后，$0 FV 记录也无法触发该条件（应为 `== 0`）。
+
+### 诊断数据
+
+- 修复前：数据集中 FV=0 记录数为 **0**（全被 parser 丢弃）
+- 修复前：`is_unfunded_liability=True` 记录数为 **0**
+- 修复前：所有 4,453 条 Revolver/DD 均有正 FV（min=0.003M），实为 funded 仓位
+
+### 修复方案（两层同步修复）
+
+**Layer 1 — `src/simple_parser.py`**:
+```python
+# 修复前（第 196 行）
+if val > 0.1:
+    fair_value = cell
+    break
+
+# 修复后（v1.4）
+if val >= 0:   # 允许 $0 FV（unfunded revolver/delayed draw）
+    fair_value = cell
+    break
+```
+
+记录创建条件放宽（第 218 行）：
+```python
+# 修复后：FV=0 但有 position_size 的行也保留
+if current_company and investment_type and (fair_value is not None or position_size_raw):
+    fv_parsed = self._parse_fair_value(fair_value) if fair_value is not None else 0.0
+    record = {..., 'fair_value_usd_mn': fv_parsed, ...}
+```
+
+**Layer 2 — `src/data_cleaner.py`**:
+```python
+# 修复前
+revolver_mask = (self.df['fair_value_usd_mn'] < 0) & (...)
+
+# 修复后（v1.4）
+revolver_mask = (self.df['fair_value_usd_mn'] == 0) & (
+    self.df['investment_type_std'].str.contains('Revolver|Delayed Draw', case=False, na=False)
+)
+```
+
+### 修复效果
+
+- 重新解析后总记录数：71,687 → **77,387**（+5,700 条，含新增 FV=0 unfunded 行）
+- `is_unfunded_liability=True`：0 → **424 条**（Delayed Draw 333, Revolver 62, First Lien Revolver 29）
+- FV=0 记录在原始解析阶段：0 → **5,794 条**（其中大部分被 step3/step4 进一步过滤）
+
+### 修改文件
+
+| 文件 | 行号 | 修改 |
+|------|------|------|
+| `src/simple_parser.py` | ~196 | `val > 0.1` → `val >= 0` |
+| `src/simple_parser.py` | ~218 | 放宽记录创建条件，FV=0 行可保存 |
+| `src/data_cleaner.py` | step4 Rule 1 | `< 0` → `== 0` |
+
+---
+
+## Bug 13 (P1) — LLM 行业分类 mask 检查空字符串而非 NaN
+
+### 问题描述
+
+`step_llm_industry()` 的 `no_ind_mask` 仅检查 `isna()` 和 `== 'Other'`，但 `industry_clean` 字段在缺失时存储空字符串 `''`（而非 NaN），导致 LLM 步骤识别到 0 条待分类记录。
+
+### 修复方案
+
+```python
+# 修复前
+no_ind_mask = self.df['industry_clean'].isna() | (self.df['industry_clean'] == 'Other')
+
+# 修复后（v1.4）
+no_ind_mask = (
+    self.df['industry_clean'].isna() |
+    (self.df['industry_clean'] == '') |
+    (self.df['industry_clean'] == 'Other')
+)
+```
+
+同步修复 `valid_total` 统计：
+```python
+valid_total = (
+    self.df['industry_clean'].notna() &
+    (self.df['industry_clean'] != '') &
+    (self.df['industry_clean'] != 'Other')
+)
+```
+
+### 修改文件
+
+- `src/data_cleaner.py`: `step_llm_industry()` 方法，no_ind_mask 和 valid_total 两处
+
+---
+
+## Bug 14 (P1) — LLM 模型版本已弃用（claude-3-5-haiku-20241022 EOL）
+
+### 问题描述
+
+`src/llm_industry_classifier.py` 默认使用 `claude-3-5-haiku-20241022`，该模型于 2026-02-19 已达到 End-of-Life，API 请求返回 DeprecationWarning 并可能导致 502 错误。
+
+### 修复方案
+
+将默认模型从 `claude-3-5-haiku-20241022` 更新为 `claude-haiku-4-5`，同步更新模块文档字符串。
+
+### 修改文件
+
+- `src/llm_industry_classifier.py`: 默认 `model` 参数和模块 docstring
+
+---
+
+## v1.4 修复汇总
+
+| Bug | 优先级 | 影响 | 修复文件 | 效果 |
+|-----|--------|------|----------|------|
+| is_unfunded_liability 恒为 False（双层 Bug） | P0 | 所有 unfunded commitment 丢失 | simple_parser.py + data_cleaner.py | 424 条 unfunded 正确标记；+5,700 条新记录 |
+| LLM mask 空字符串 | P1 | LLM 步骤跳过全部待分类记录 | data_cleaner.py | 正确识别 64,699 条待分类记录 |
+| LLM 模型版本已弃用 | P1 | API DeprecationWarning / 潜在 502 | llm_industry_classifier.py | 升级至 claude-haiku-4-5 |
+

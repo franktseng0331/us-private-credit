@@ -460,9 +460,11 @@ class BDCDataCleaner:
         self.df['is_anomaly'] = False
         self.df['is_unfunded_liability'] = False
 
-        # 规则1: fair_value < 0 且为 Revolver/Delayed Draw → unfunded liability
+        # 规则1: fair_value == 0 且为 Revolver/Delayed Draw → unfunded liability
+        # v1.4 修复: 改为 == 0（unfunded revolver 的 FV 为 $0，不是负数）
+        # simple_parser.py 同步修复后，$0 FV 的 Revolver/DD 行现在可以进入数据集
         revolver_mask = (
-            (self.df['fair_value_usd_mn'] < 0) &
+            (self.df['fair_value_usd_mn'] == 0) &
             (self.df['investment_type_std'].str.contains('Revolver|Delayed Draw', case=False, na=False))
         )
         self.df.loc[revolver_mask, 'is_unfunded_liability'] = True
@@ -876,6 +878,70 @@ class BDCDataCleaner:
 
         print(f"  - 回填记录数: {backfilled_count:,}")
         print(f"  - 回填后有效率: {self.stats['step2_industry']['valid_percentage_after_backfill']:.2f}%")
+
+        return self
+
+    def step_llm_industry(self, min_appearances: int = 2):
+        """
+        步骤LLM: 利用 Claude LLM 批量补全 industry_clean 字段。
+
+        仅对出现 >= min_appearances 次且当前无行业标签的借款人进行分类。
+        结果通过本地 JSON 缓存复用，避免重复 API 调用。
+
+        需要环境变量 ANTHROPIC_API_KEY。
+        运行方式: python run_cleaning.py --llm
+        """
+        print("\n步骤LLM: LLM行业分类补全...")
+        import sys
+        import os
+        sys.path.insert(0, os.path.dirname(__file__))
+        from llm_industry_classifier import LLMIndustryClassifier
+
+        # 找出无行业标签的记录（industry_clean 用 '' 空字符串表示缺失）
+        no_ind_mask = (
+            self.df['industry_clean'].isna() |
+            (self.df['industry_clean'] == '') |
+            (self.df['industry_clean'] == 'Other')
+        )
+        no_ind_count = no_ind_mask.sum()
+        print(f"  无行业标签记录: {no_ind_count:,} ({no_ind_count / len(self.df) * 100:.1f}%)")
+
+        # 只对高频借款人（避免对单次出现的公司浪费 API）
+        counts = self.df.loc[no_ind_mask, 'borrower_name_clean'].value_counts()
+        to_classify_names = counts[counts >= min_appearances].index.tolist()
+        print(f"  待分类借款人（出现≥{min_appearances}次）: {len(to_classify_names):,} 个")
+
+        if not to_classify_names:
+            print("  无需分类，跳过。")
+            return self
+
+        classifier = LLMIndustryClassifier()
+        industry_map = classifier.classify_batch(to_classify_names)
+
+        # 向量化回填（比 apply 快 10x）
+        mask_update = no_ind_mask & self.df['borrower_name_clean'].isin(industry_map)
+        self.df.loc[mask_update, 'industry_clean'] = (
+            self.df.loc[mask_update, 'borrower_name_clean'].map(industry_map)
+        )
+        updated_count = mask_update.sum()
+
+        valid_total = (
+            self.df['industry_clean'].notna() &
+            (self.df['industry_clean'] != '') &
+            (self.df['industry_clean'] != 'Other')
+        )
+        valid_count = valid_total.sum()
+        valid_pct = valid_count / len(self.df) * 100
+
+        self.stats['step_llm_industry'] = {
+            'candidates_classified': len(to_classify_names),
+            'records_updated': int(updated_count),
+            'valid_industry_after_llm': int(valid_count),
+            'valid_pct_after_llm': round(valid_pct, 2),
+        }
+
+        print(f"  LLM 回填记录: {updated_count:,}")
+        print(f"  LLM 回填后有效行业: {valid_count:,} ({valid_pct:.1f}%)")
 
         return self
 
