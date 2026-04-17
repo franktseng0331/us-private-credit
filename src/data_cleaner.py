@@ -113,6 +113,22 @@ class BDCDataCleaner:
             if 'growth capital' in raw_lower:
                 return 'Senior Secured Loan'
 
+            # 优先级14.5: 衍生品 / 利率互换
+            if any(kw in raw_lower for kw in ['interest rate swap', 'total return swap',
+                                               'credit default swap', 'swap agreement',
+                                               'derivative']):
+                return 'Structured Finance / CLO'
+
+            # 优先级14.6: 合伙权益（有限/普通合伙人份额）—— 补充 LP/GP/partnership 格式
+            if any(kw in raw_lower for kw in ['partnership interest', 'limited partner',
+                                               'general partner', 'gp interest']):
+                return 'Common Equity'
+
+            # 优先级14.7: 可转换票据/债券
+            if any(kw in raw_lower for kw in ['convertible note', 'convertible bond',
+                                               'convertible debt', 'convertible debenture']):
+                return 'Subordinated Debt'
+
             # 优先级15: 无法匹配
             return 'Unknown'
 
@@ -376,6 +392,7 @@ class BDCDataCleaner:
         print("\n步骤3: 金额单位统一...")
 
         conversion_count = 0
+        cb_conversion_count = 0
         REASONABLE_LO, REASONABLE_HI = 0.1, 500  # 百万美元合理区间
 
         for (cik, filing_id), group in self.df.groupby(['cik', 'filing_id']):
@@ -387,28 +404,51 @@ class BDCDataCleaner:
             if pd.isna(fv_median):
                 continue
 
-            # 若 median 已在合理百万区间，跳过（防止合法大仓位误触 p99 规则）
-            if REASONABLE_LO <= fv_median <= REASONABLE_HI:
-                continue
+            # 判断 fair_value 是否需要转换
+            fv_factor = None
+            if not (REASONABLE_LO <= fv_median <= REASONABLE_HI):
+                if fv_median > 500000:
+                    fv_factor = 1_000_000   # median > 500K → 美元单位
+                elif fv_75th > 1000:
+                    fv_factor = 1000        # p75 > 1000 → 千美元单位
+                elif fv_median > 100:
+                    fv_factor = 1000        # median > 100 → 千美元单位
+                elif fv_median < 0.001:
+                    fv_factor = 1_000_000   # median < 0.001 → 美元单位（极小值）
 
-            if fv_median > 500000:
-                factor = 1_000_000   # median > 500K → 美元单位（百万美元后应为 0.5-500M 合理区间）
-            elif fv_75th > 1000:
-                factor = 1000        # p75 > 1000 → 千美元单位
-            elif fv_median > 100:
-                factor = 1000        # median > 100 → 千美元单位
-            elif fv_median < 0.001:
-                factor = 1_000_000   # median < 0.001 → 美元单位（已被过度除以，极小值）
+            if fv_factor:
+                self.df.loc[mask, 'position_size_usd_mn'] /= fv_factor
+                self.df.loc[mask, 'cost_basis_usd_mn'] /= fv_factor
+                self.df.loc[mask, 'fair_value_usd_mn'] /= fv_factor
+                conversion_count += 1
+
+            # Bug fix P0-B (v1.3): 独立检测 cost_basis 单位
+            # 当 fair_value 已在合理区间（fv_factor=None）时，cost_basis 可能仍为原始美元/千美元单位
             else:
-                continue
+                cb = self.df.loc[mask, 'cost_basis_usd_mn'].dropna()
+                if len(cb) > 0:
+                    cb_median = cb.median()
+                    cb_75th = cb.quantile(0.75)
+                    cb_factor = None
+                    if cb_median > 500000:
+                        cb_factor = 1_000_000
+                    elif cb_75th > 1000:
+                        cb_factor = 1000
+                    elif cb_median > 100:
+                        cb_factor = 1000
+                    elif 0 < cb_median < 0.001:
+                        cb_factor = 1_000_000
+                    if cb_factor:
+                        self.df.loc[mask, 'cost_basis_usd_mn'] /= cb_factor
+                        self.df.loc[mask, 'position_size_usd_mn'] /= cb_factor
+                        cb_conversion_count += 1
 
-            self.df.loc[mask, 'position_size_usd_mn'] /= factor
-            self.df.loc[mask, 'cost_basis_usd_mn'] /= factor
-            self.df.loc[mask, 'fair_value_usd_mn'] /= factor
-            conversion_count += 1
-
-        self.stats['step3_unit_conversion'] = {'total_conversions': conversion_count}
-        print(f"  - 转换的财报数: {conversion_count}")
+        self.stats['step3_unit_conversion'] = {
+            'total_conversions': conversion_count,
+            'cb_only_conversions': cb_conversion_count
+        }
+        print(f"  - 转换的财报数（fair_value）: {conversion_count}")
+        print(f"  - 转换的财报数（cost_basis独立）: {cb_conversion_count}")
 
         return self
 
@@ -439,17 +479,36 @@ class BDCDataCleaner:
         position_anomaly = self.df['position_size_usd_mn'] < 0
         self.df.loc[cost_anomaly | position_anomaly, 'is_anomaly'] = True
 
+        # 规则4: fair_value > 10,000M → 极大值异常（聚合行或单位转换失败）
+        # 正常单笔私募信贷投资通常 < 1,000M；超过 10,000M 基本为聚合行或数据错误
+        EXTREME_FV_THRESHOLD = 10_000  # 百万美元
+        extreme_fv_mask = self.df['fair_value_usd_mn'] > EXTREME_FV_THRESHOLD
+        self.df.loc[extreme_fv_mask, 'is_anomaly'] = True
+
+        # 规则4b: cost_basis 单位不一致异常（原始美元未转换）
+        # 当 cost_basis > 10,000M 且 cost_basis/fair_value 比值 > 100x 时，
+        # 说明 cost_basis 仍为原始美元/千美元单位，该记录数据不可靠
+        # 注：正常大额仓位（如FSIC Net Senior Secured Loans cb=10,023M fv=9,780M ratio≈1）不触发
+        fv_safe = self.df['fair_value_usd_mn'].replace(0, np.nan)
+        cb_fv_ratio = self.df['cost_basis_usd_mn'] / fv_safe
+        cb_unit_mismatch = (self.df['cost_basis_usd_mn'] > 10_000) & (cb_fv_ratio > 100)
+        self.df.loc[cb_unit_mismatch, 'is_anomaly'] = True
+
         # 统计
         self.stats['step4_negative_values'] = {
             'unfunded_liability_count': int(revolver_mask.sum()),
             'anomaly_count': int(self.df['is_anomaly'].sum()),
             'negative_fair_value': int((self.df['fair_value_usd_mn'] < 0).sum()),
             'negative_cost_basis': int((self.df['cost_basis_usd_mn'] < 0).sum()),
+            'extreme_fair_value_count': int(extreme_fv_mask.sum()),
+            'cb_unit_mismatch_count': int(cb_unit_mismatch.sum()),
             'negative_position_size': int((self.df['position_size_usd_mn'] < 0).sum())
         }
 
         print(f"  - Unfunded Liability: {revolver_mask.sum():,}")
         print(f"  - Anomaly: {self.df['is_anomaly'].sum():,}")
+        print(f"  - 极大值异常(FV>10,000M): {extreme_fv_mask.sum():,}")
+        print(f"  - cost_basis单位异常: {cb_unit_mismatch.sum():,}")
 
         return self
 
@@ -578,11 +637,21 @@ class BDCDataCleaner:
 
             rate_str = str(rate_str)
 
-            # 匹配 (1% PIK) 或 (100 bps PIK)
+            # 格式1: (1% PIK) 或 (100 bps PIK) — 值在 PIK 关键字前
             match = re.search(r'\(?\s*(\d+\.?\d*)\s*(%|bps)?\s*PIK\s*\)?', rate_str, re.IGNORECASE)
             if match:
                 value = float(match.group(1))
                 unit = match.group(2)
+                if unit and unit.lower() == '%':
+                    value *= 100
+                return float(value)
+
+            # 格式2: PIK Fixed Interest Rate 1.5% — 值在 PIK 关键字后
+            match2 = re.search(r'PIK\s+(?:Fixed\s+Interest\s+Rate\s+)?(\d+\.?\d*)\s*(%|bps)?',
+                                rate_str, re.IGNORECASE)
+            if match2:
+                value = float(match2.group(1))
+                unit = match2.group(2)
                 if unit and unit.lower() == '%':
                     value *= 100
                 return float(value)
@@ -602,6 +671,15 @@ class BDCDataCleaner:
         pik_mismatch = (self.df['pik_spread_bps'].notna() & (self.df['pik_spread_bps'] > 0)) & (self.df['is_pik'] == False)
         self.df.loc[pik_mismatch, 'is_pik'] = True
 
+        # Bug fix P2-A (v1.3): 新增 base_rate_clean — 处理 LIBOR 退出后的遗留标注
+        # USD LIBOR 于 2023-06-30 停用；此后标注 LIBOR 的合同视为 SOFR 遗留合同
+        LIBOR_RETIREMENT = pd.Timestamp('2023-07-01')
+        filing_date_ts = pd.to_datetime(self.df['filing_date'], errors='coerce')
+        self.df['base_rate_clean'] = self.df['base_rate'].copy()
+        libor_post_mask = (self.df['base_rate'] == 'LIBOR') & (filing_date_ts >= LIBOR_RETIREMENT)
+        self.df.loc[libor_post_mask, 'base_rate_clean'] = 'SOFR_legacy'
+        libor_legacy_count = int(libor_post_mask.sum())
+
         # 统计
         base_rate_valid = (self.df['base_rate'] != '').sum()
         spread_valid = (self.df['spread_bps'] > 0).sum()
@@ -611,12 +689,14 @@ class BDCDataCleaner:
             'base_rate_valid_count': int(base_rate_valid),
             'spread_extracted_count': int(spread_valid),
             'pik_extracted_count': int(pik_count),
-            'pik_is_pik_corrected': int(pik_mismatch.sum())
+            'pik_is_pik_corrected': int(pik_mismatch.sum()),
+            'libor_legacy_count': libor_legacy_count
         }
 
         print(f"  - Base Rate 提取: {base_rate_valid:,}")
         print(f"  - Spread 提取: {spread_valid:,}")
         print(f"  - PIK 提取: {pik_count:,}")
+        print(f"  - LIBOR→SOFR_legacy 重标: {libor_legacy_count:,}")
 
         return self
 

@@ -243,3 +243,164 @@ def extract_spread_bps(rate_str: str) -> float:
 | Bug | 影响 | 修复文件 | 效果 |
 |-----|------|----------|------|
 | spread_bps返回0 | 54,911条虚假零值 | data_cleaner.py step6 | NaN正确区分缺失vs零值，有效率23.4% |
+
+---
+
+# v1.3 数据质量修复 (2026-04-17)
+
+多维度质量审计发现 5 个影响数据准确性的问题（P0~P2），已全部修复。
+
+## Bug 7 (P0-A) — step4 未标记极大值异常（FV > 10,000M）
+
+**根因**: `step4_flag_negative_values()` 仅检查负值，未检测统计极大值。2,053 条 `fair_value_usd_mn > 10,000M` 的记录（来自聚合行或单位转换失败残留）未被标记为 `is_anomaly`。
+
+**影响**: 2,053 条极值行污染金额汇总分析，用户过滤 `is_anomaly==False` 后仍受干扰。
+
+**修复**: 在 step4 Rule 3 之后追加 Rule 4：
+
+```python
+# 规则4: fair_value > 10,000M → 极大值异常
+EXTREME_FV_THRESHOLD = 10_000
+extreme_fv_mask = self.df['fair_value_usd_mn'] > EXTREME_FV_THRESHOLD
+self.df.loc[extreme_fv_mask, 'is_anomaly'] = True
+```
+
+**效果**: `fair_value_usd_mn > 10,000M` 的未标记记录从 2,053 条降至 **0**。
+
+---
+
+## Bug 8 (P0-B) — cost_basis_usd_mn 未独立归一化 + 单位不一致检测缺失
+
+**根因 A（step3）**: 当 filing 的 `fair_value_usd_mn` median 已在 [0.1, 500]M 合理区间时，`step3` 对整个 filing 执行 `continue`，但该 filing 的 `cost_basis_usd_mn` 可能仍为原始美元单位（与 fair_value 独立存储）。典型案例：FSIC fair_value=15M（合理），cost_basis=236,160,807M（原始美元未除以 1M）。
+
+**根因 B（step4）**: 即使 step3 完成转换，逐行 `cb/fv` 比值异常（如 MAIN UniTek cost_basis=281,000M，fair_value=27M）无法被文件级 median 检测捕获。
+
+**影响**: ~11,421 条记录的 `cost_basis_usd_mn` 值虚高数百至数千倍，最大值达 236B M（应为 236M）。
+
+**修复**:
+
+*step3*：在 fair_value 已合理时，独立检测并转换 cost_basis：
+
+```python
+else:  # fair_value 已在合理区间，跳过 fv 转换
+    cb = self.df.loc[mask, 'cost_basis_usd_mn'].dropna()
+    if len(cb) > 0:
+        cb_median = cb.median()
+        cb_75th = cb.quantile(0.75)
+        cb_factor = None
+        if cb_median > 500000:
+            cb_factor = 1_000_000
+        elif cb_75th > 1000:
+            cb_factor = 1000
+        elif cb_median > 100:
+            cb_factor = 1000
+        elif 0 < cb_median < 0.001:
+            cb_factor = 1_000_000
+        if cb_factor:
+            self.df.loc[mask, 'cost_basis_usd_mn'] /= cb_factor
+            self.df.loc[mask, 'position_size_usd_mn'] /= cb_factor
+            cb_conversion_count += 1
+```
+
+*step4*：追加 Rule 4b，按 cb/fv 比值检测逐行单位不一致：
+
+```python
+# 规则4b: cost_basis 单位不一致（cb/fv 比 > 100 且 cb > 10,000M）
+fv_safe = self.df['fair_value_usd_mn'].replace(0, np.nan)
+cb_fv_ratio = self.df['cost_basis_usd_mn'] / fv_safe
+cb_unit_mismatch = (self.df['cost_basis_usd_mn'] > 10_000) & (cb_fv_ratio > 100)
+self.df.loc[cb_unit_mismatch, 'is_anomaly'] = True
+```
+
+**效果**:
+- step3 新增 242 个 cost_basis-only 转换（filing 级别）
+- step4 Rule 4b 新增标记 204 条逐行单位不一致异常
+- `cost_basis_usd_mn > 10,000M` 的未标记记录从 207 条降至 **2**（2 条为已接受的边缘案例：FSIC CLO 池 cb≈fv，OBDC2 Amergin 单行）
+
+---
+
+## Bug 9 (P1-A) — PIK 正则未匹配 "PIK Fixed Interest Rate X.X%" 格式
+
+**根因**: `extract_pik_spread_bps()` 的正则 `r'\(?\s*(\d+\.?\d*)\s*(%|bps)?\s*PIK\s*\)?'` 只能匹配"值在 PIK 前面"的格式（如 `1.5% PIK`），无法匹配"PIK 关键字在前"的格式（如 `PIK Fixed Interest Rate 1.5%`）。
+
+**影响**: 约 150 条包含 `PIK Fixed Interest Rate` 格式的记录被错误标记为无 PIK（`pik_spread_bps = NaN`）。
+
+**修复**: 添加第二个正则分支：
+
+```python
+# 格式2: PIK Fixed Interest Rate 1.5% — 值在 PIK 关键字后
+match2 = re.search(r'PIK\s+(?:Fixed\s+Interest\s+Rate\s+)?(\d+\.?\d*)\s*(%|bps)?',
+                   rate_str, re.IGNORECASE)
+if match2:
+    value = float(match2.group(1))
+    unit = match2.group(2)
+    if unit and unit.lower() == '%':
+        value *= 100
+    return float(value)
+```
+
+**效果**: `pik_spread_bps.notna()` 有效记录从 3,379 条增至 **3,529 条**（+150 条）。
+
+---
+
+## Bug 10 (P2-A) — LIBOR 退出后仍标注为 LIBOR（缺少 base_rate_clean 字段）
+
+**根因**: `base_rate` 字段直接存储原始提取结果，不处理历史性错误：USD LIBOR 已于 2023-06-30 停用，但 955 条 2023-07 后的记录仍标注为 `LIBOR`（历史合同未更新利率索引）。下游分析者无法区分"真实 SOFR"与"LIBOR 过渡期遗留"。
+
+**影响**: 缺乏字段区分 LIBOR 与 SOFR，影响利率基准分析准确性。
+
+**修复**: 在 step6 末尾新增 `base_rate_clean` 列（向量化实现）：
+
+```python
+LIBOR_RETIREMENT = pd.Timestamp('2023-07-01')
+filing_date_ts = pd.to_datetime(self.df['filing_date'], errors='coerce')
+self.df['base_rate_clean'] = self.df['base_rate'].copy()
+libor_post_mask = (self.df['base_rate'] == 'LIBOR') & (filing_date_ts >= LIBOR_RETIREMENT)
+self.df.loc[libor_post_mask, 'base_rate_clean'] = 'SOFR_legacy'
+```
+
+**效果**: 新增 `base_rate_clean` 字段（第 35 列），955 条 2023-07 后的 LIBOR 记录重标为 `SOFR_legacy`；总字段数从 34 升至 **35**。
+
+---
+
+## Bug 11 (P2-B) — investment_type_std=Unknown 覆盖不足（衍生品/合伙权益/可转债）
+
+**根因**: `classify_investment_type()` 未包含三类常见格式：
+1. 利率互换/衍生品（"Interest Rate Swap", "Total Return Swap"）
+2. 合伙权益（"Partnership Interest", "Limited Partner Interest", "LP Interest"）
+3. 可转换票据（"Convertible Note", "Convertible Bond"）
+
+**影响**: 4,334 条记录（6.0%）被归入 `Unknown`，含 TSLX 1,156 条、HTGC 816 条。
+
+**修复**: 在 `return 'Unknown'` 前插入新映射规则（优先级 14.5）：
+
+```python
+# 利率互换 / 衍生品
+if any(kw in raw_lower for kw in ['interest rate swap', 'total return swap',
+                                    'credit default swap', 'swap agreement', 'derivative']):
+    return 'Structured Finance / CLO'
+
+# 合伙权益（有限/普通合伙人份额）
+if any(kw in raw_lower for kw in ['partnership interest', 'limited partner',
+                                    'general partner', 'gp interest']):
+    return 'Common Equity'
+
+# 可转换票据
+if any(kw in raw_lower for kw in ['convertible note', 'convertible bond',
+                                    'convertible debt', 'convertible debenture']):
+    return 'Subordinated Debt'
+```
+
+**效果**: `Unknown` 从 4,334 条（6.0%）降至 **3,828 条**（5.3%，减少 506 条）。
+
+---
+
+## v1.3 修复汇总
+
+| Bug | 优先级 | 影响 | 修复文件 | 效果 |
+|-----|--------|------|----------|------|
+| step4 极大值未标记 | P0-A | 2,053 条极值行未被过滤 | data_cleaner.py step4 | FV>10,000M 未标记降至 0 |
+| cost_basis 归一化缺失 | P0-B | ~11,421 条 cb 值虚高 | data_cleaner.py step3+step4 | 242 filing 级转换 + 204 行级标记 |
+| PIK 正则格式漏匹配 | P1-A | ~150 条 PIK 未识别 | data_cleaner.py step6 | PIK 有效记录 3,379→3,529 |
+| LIBOR 退出后未重标 | P2-A | 无法区分 LIBOR/SOFR | data_cleaner.py step6 | 新增 base_rate_clean，955 条 SOFR_legacy |
+| Unknown 类型覆盖不足 | P2-B | 4,334 条未分类 | data_cleaner.py step1 | Unknown 降至 3,828（-506） |

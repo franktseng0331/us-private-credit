@@ -1,9 +1,9 @@
 {
-  "cleaning_date": "2026-04-17T11:49:53.399911",
+  "cleaning_date": "2026-04-17T13:25:46.392399",
   "input_file": "data/parsed/deal_positions.csv",
   "output_file": "data/cleaned/deal_positions_clean.csv",
   "total_records": 71687,
-  "total_columns": 34,
+  "total_columns": 35,
   "new_columns": [
     "investment_type_std",
     "industry_clean",
@@ -22,21 +22,21 @@
     },
     "step1_investment_type": {
       "total_records": 71687,
-      "unknown_count": 4334,
-      "unknown_percentage": 6.05,
+      "unknown_count": 3828,
+      "unknown_percentage": 5.34,
       "type_distribution": {
         "First Lien Term Loan": 22805,
-        "Common Equity": 13854,
+        "Common Equity": 14129,
         "Senior Secured Loan": 10441,
         "Preferred Equity": 6471,
         "Warrant": 4491,
-        "Unknown": 4334,
+        "Unknown": 3828,
         "Second Lien Term Loan": 2914,
         "First Lien Delayed Draw": 2861,
-        "Subordinated Debt": 1644,
+        "Subordinated Debt": 1810,
         "First Lien Revolver": 813,
         "Revolver": 779,
-        "Structured Finance / CLO": 208,
+        "Structured Finance / CLO": 273,
         "Unsecured Note": 66,
         "Unitranche Loan": 6
       }
@@ -64,25 +64,29 @@
       "valid_percentage_after_backfill": 17.45
     },
     "step3_unit_conversion": {
-      "total_conversions": 217
+      "total_conversions": 217,
+      "cb_only_conversions": 242
     },
     "step4_negative_values": {
       "unfunded_liability_count": 0,
-      "anomaly_count": 1232,
+      "anomaly_count": 3457,
       "negative_fair_value": 0,
       "negative_cost_basis": 254,
+      "extreme_fair_value_count": 2053,
+      "cb_unit_mismatch_count": 204,
       "negative_position_size": 979
     },
     "step5_date_parsing": {
-      "total_debt_records": 46871,
-      "parsed_count": 42271,
-      "parse_rate_percentage": 90.19
+      "total_debt_records": 46596,
+      "parsed_count": 42179,
+      "parse_rate_percentage": 90.52
     },
     "step6_interest_rate": {
       "base_rate_valid_count": 40809,
       "spread_extracted_count": 16776,
-      "pik_extracted_count": 3379,
-      "pik_is_pik_corrected": 0
+      "pik_extracted_count": 3509,
+      "pik_is_pik_corrected": 0,
+      "libor_legacy_count": 955
     },
     "step7_borrower_name": {
       "unique_original": 8570,
