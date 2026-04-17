@@ -27,6 +27,7 @@ class BDCDataCleaner:
         self.input_csv = input_csv
         self.df = None
         self.stats = {
+            'step0_dedup': {},
             'step1_investment_type': {},
             'step2_industry': {},
             'step3_unit_conversion': {},
@@ -41,6 +42,16 @@ class BDCDataCleaner:
         print(f"加载数据: {self.input_csv}")
         self.df = pd.read_csv(self.input_csv, low_memory=False)
         print(f"总记录数: {len(self.df):,}")
+        return self
+
+    def step0_dedup(self):
+        """步骤0: 去除完全重复记录"""
+        print("\n步骤0: 去重...")
+        before = len(self.df)
+        self.df = self.df.drop_duplicates()
+        removed = before - len(self.df)
+        print(f"  - 移除重复记录: {removed:,} 条，剩余 {len(self.df):,} 条")
+        self.stats['step0_dedup'] = {'removed': removed, 'remaining': len(self.df)}
         return self
 
     def step1_standardize_investment_type(self):
@@ -357,73 +368,47 @@ class BDCDataCleaner:
     def step3_normalize_units(self):
         """步骤3: 金额单位统一（按 BDC + filing_id 分组）
 
-        Bug fix (2026-04-16): 改进单位检测逻辑
-        原因: 原阈值5000导致部分千美元/美元单位财报未转换，造成数据膨胀
-        新逻辑:
-        - max > 100000 → 美元单位（如TCPC的280M实际是280,464,610美元）
-        - median > 100 → 千美元单位
-        - median < 0.01 → 美元单位
+        Bug fix v1.1 (2026-04-17): 单次判断 + 合理区间保护
+        - 若 median 已在 [0.1, 500] 合理百万美元区间，直接跳过（防止 CLO 等大仓位误触发）
+        - 仅当 median 明确超出合理区间时才转换
+        - 使用 p75 替代 p99，避免尾部极端值（合法大仓位）误判单位
         """
         print("\n步骤3: 金额单位统一...")
 
-        conversion_log = []
+        conversion_count = 0
+        REASONABLE_LO, REASONABLE_HI = 0.1, 500  # 百万美元合理区间
 
-        # 按 BDC + filing_id 分组
         for (cik, filing_id), group in self.df.groupby(['cik', 'filing_id']):
-            # 计算该份财报的 fair_value 统计量
-            fv_median = group['fair_value_usd_mn'].median()
-            fv_max = group['fair_value_usd_mn'].max()
-            fv_75th = group['fair_value_usd_mn'].quantile(0.75)
+            mask = (self.df['cik'] == cik) & (self.df['filing_id'] == filing_id)
+            fv = self.df.loc[mask, 'fair_value_usd_mn']
+            fv_median = fv.median()
+            fv_75th = fv.quantile(0.75)
 
             if pd.isna(fv_median):
                 continue
 
-            # 判断单位（改进后的逻辑）
-            # 规则1: max > 100000 → 美元
-            # 极端大值说明单位是美元（如TCPC max=280,464,610美元=280M）
-            if fv_max > 100000:
-                factor = 1_000_000
-                unit = 'dollars'
-            # 规则2: 75th percentile > 1000 → 千美元
-            # 大部分值都很大，说明单位是千美元
-            elif fv_75th > 1000:
-                factor = 1000
-                unit = 'thousands'
-            # 规则3: median > 100 → 千美元
-            # 正常情况下单笔投资0.5M-100M，median > 100说明单位是千美元
-            elif fv_median > 100:
-                factor = 1000
-                unit = 'thousands'
-            # 规则4: median < 0.01 → 美元
-            elif fv_median < 0.01:
-                factor = 1_000_000
-                unit = 'dollars'
-            else:
-                # 已经是百万美元
+            # 若 median 已在合理百万区间，跳过（防止合法大仓位误触 p99 规则）
+            if REASONABLE_LO <= fv_median <= REASONABLE_HI:
                 continue
 
-            # 修正该份财报的所有金额字段
-            mask = (self.df['cik'] == cik) & (self.df['filing_id'] == filing_id)
+            if fv_median > 500000:
+                factor = 1_000_000   # median > 500K → 美元单位（百万美元后应为 0.5-500M 合理区间）
+            elif fv_75th > 1000:
+                factor = 1000        # p75 > 1000 → 千美元单位
+            elif fv_median > 100:
+                factor = 1000        # median > 100 → 千美元单位
+            elif fv_median < 0.001:
+                factor = 1_000_000   # median < 0.001 → 美元单位（已被过度除以，极小值）
+            else:
+                continue
+
             self.df.loc[mask, 'position_size_usd_mn'] /= factor
             self.df.loc[mask, 'cost_basis_usd_mn'] /= factor
             self.df.loc[mask, 'fair_value_usd_mn'] /= factor
+            conversion_count += 1
 
-            conversion_log.append({
-                'cik': cik,
-                'filing_id': filing_id,
-                'original_unit': unit,
-                'median_before': float(fv_median),
-                'max_before': float(fv_max),
-                'conversion_factor': factor,
-                'records_affected': int(mask.sum())
-            })
-
-        self.stats['step3_unit_conversion'] = {
-            'total_conversions': len(conversion_log),
-            'conversion_log': conversion_log
-        }
-
-        print(f"  - 修正的财报数: {len(conversion_log)}")
+        self.stats['step3_unit_conversion'] = {'total_conversions': conversion_count}
+        print(f"  - 转换的财报数: {conversion_count}")
 
         return self
 
@@ -524,6 +509,11 @@ class BDCDataCleaner:
             axis=1
         )
 
+        # 生成 is_expired 标志
+        maturity_parsed = pd.to_datetime(self.df['maturity_date'], errors='coerce')
+        today = pd.Timestamp.today().normalize()
+        self.df['is_expired'] = maturity_parsed.notna() & (maturity_parsed < today)
+
         # 统计（排除股权类资产）
         debt_mask = ~self.df['investment_type_std'].isin(['Common Equity', 'Preferred Equity', 'Warrant'])
         debt_records = self.df[debt_mask]
@@ -537,6 +527,7 @@ class BDCDataCleaner:
         }
 
         print(f"  - 债务类资产解析成功率: {parse_rate:.2f}% (目标 > 80%)")
+        print(f"  - is_expired 已到期记录: {self.df['is_expired'].sum():,}")
 
         return self
 
@@ -580,10 +571,10 @@ class BDCDataCleaner:
 
             return 0
 
-        def extract_pik_spread_bps(rate_str: str) -> int:
-            """提取 PIK 利差（基点）"""
+        def extract_pik_spread_bps(rate_str: str):
+            """提取 PIK 利差（基点），无 PIK 返回 np.nan 以区分零利差"""
             if pd.isna(rate_str):
-                return 0
+                return np.nan
 
             rate_str = str(rate_str)
 
@@ -594,9 +585,9 @@ class BDCDataCleaner:
                 unit = match.group(2)
                 if unit and unit.lower() == '%':
                     value *= 100
-                return int(value)
+                return float(value)
 
-            return 0
+            return np.nan
 
         # 更新 base_rate
         self.df['base_rate'] = self.df['interest_rate_raw'].apply(extract_base_rate)
@@ -608,13 +599,13 @@ class BDCDataCleaner:
         self.df['pik_spread_bps'] = self.df['interest_rate_raw'].apply(extract_pik_spread_bps)
 
         # 交叉验证 is_pik
-        pik_mismatch = (self.df['pik_spread_bps'] > 0) & (self.df['is_pik'] == False)
+        pik_mismatch = (self.df['pik_spread_bps'].notna() & (self.df['pik_spread_bps'] > 0)) & (self.df['is_pik'] == False)
         self.df.loc[pik_mismatch, 'is_pik'] = True
 
         # 统计
         base_rate_valid = (self.df['base_rate'] != '').sum()
         spread_valid = (self.df['spread_bps'] > 0).sum()
-        pik_count = (self.df['pik_spread_bps'] > 0).sum()
+        pik_count = (self.df['pik_spread_bps'].notna() & (self.df['pik_spread_bps'] > 0)).sum()
 
         self.stats['step6_interest_rate'] = {
             'base_rate_valid_count': int(base_rate_valid),

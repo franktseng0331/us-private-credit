@@ -40,6 +40,7 @@ def main():
     # 执行清洗流程
     try:
         cleaner.load_data()
+        cleaner.step0_dedup()
         cleaner.step1_standardize_investment_type()
         cleaner.step2_clean_industry()
         cleaner.step3_normalize_units()
@@ -47,6 +48,7 @@ def main():
         cleaner.step5_standardize_dates()
         cleaner.step6_extract_interest_rates()
         cleaner.step7_standardize_borrower_name()
+        cleaner.step2_backfill_industry()
         cleaner.save_results(output_csv, report_json)
 
         print("\n" + "=" * 80)
