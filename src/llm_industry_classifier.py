@@ -16,6 +16,7 @@ LLM 行业分类器
 """
 
 import json
+import os
 import re
 import time
 from pathlib import Path
@@ -56,13 +57,27 @@ class LLMIndustryClassifier:
 
     def __init__(
         self,
-        model: str = "claude-haiku-4-5",
+        model: str = None,
         cache_path: str = "data/llm_cache/industry_cache.json",
         batch_size: int = 50,
         sleep_between_batches: float = 0.5,
     ):
-        self.client = anthropic.Anthropic()
-        self.model = model
+        # Support both Anthropic and OpenAI-compatible APIs (e.g. DeepSeek)
+        deepseek_key = os.environ.get("DEEPSEEK_API_KEY", "")
+        anthropic_key = (os.environ.get("ANTHROPIC_AUTH_TOKEN")
+                         or os.environ.get("ANTHROPIC_API_KEY")
+                         or "")
+
+        if deepseek_key:
+            self._api_key = deepseek_key
+            self._base_url = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com").rstrip("/")
+            self._api_style = "openai"
+            self.model = model or "deepseek-chat"
+        else:
+            self._api_key = anthropic_key
+            self._base_url = os.environ.get("ANTHROPIC_BASE_URL", "https://api.anthropic.com").rstrip("/")
+            self._api_style = "anthropic"
+            self.model = model or "claude-haiku-4-5"
         self.batch_size = batch_size
         self.sleep_between_batches = sleep_between_batches
         self.cache_path = Path(cache_path)
@@ -126,13 +141,48 @@ class LLMIndustryClassifier:
 
         for attempt in range(max_retries):
             try:
-                msg = self.client.messages.create(
-                    model=self.model,
-                    max_tokens=2048,
-                    system=SYSTEM_PROMPT,
-                    messages=[{"role": "user", "content": user_prompt}],
-                )
-                raw_text = msg.content[0].text.strip()
+                import httpx
+                if self._api_style == "openai":
+                    headers = {
+                        "Authorization": f"Bearer {self._api_key}",
+                        "Content-Type": "application/json",
+                    }
+                    payload = {
+                        "model": self.model,
+                        "max_tokens": 2048,
+                        "messages": [
+                            {"role": "system", "content": SYSTEM_PROMPT},
+                            {"role": "user", "content": user_prompt},
+                        ],
+                    }
+                    resp = httpx.post(
+                        f"{self._base_url}/v1/chat/completions",
+                        headers=headers,
+                        json=payload,
+                        timeout=60,
+                    )
+                    resp.raise_for_status()
+                    raw_text = resp.json()["choices"][0]["message"]["content"].strip()
+                else:
+                    headers = {
+                        "x-api-key": self._api_key,
+                        "anthropic-version": "2023-06-01",
+                        "content-type": "application/json",
+                    }
+                    payload = {
+                        "model": self.model,
+                        "max_tokens": 2048,
+                        "system": SYSTEM_PROMPT,
+                        "messages": [{"role": "user", "content": user_prompt}],
+                    }
+                    resp = httpx.post(
+                        f"{self._base_url}/v1/messages",
+                        headers=headers,
+                        json=payload,
+                        timeout=60,
+                    )
+                    resp.raise_for_status()
+                    raw_text = resp.json()["content"][0]["text"].strip()
                 return self._parse_response(raw_text, names)
             except Exception as e:
                 err_str = str(e)

@@ -230,6 +230,135 @@ class BDCCollector:
         logger.info("下载完成！")
 
 
+    def download_nport_filings(self, cik: str, ticker: str,
+                               start_date: str = "2021-01-01",
+                               end_date: str = "2026-03-31",
+                               max_retries: int = 3) -> List[Dict]:
+        """
+        下载 N-PORT-P XML 文件到 data/raw/nport/<cik>/<YYYY-MM>/.
+
+        N-PORT-P 是 SEC 要求投资公司每月提交的结构化 XML 报告（非 HTML），
+        每月提交（vs 10-Q 每季度），覆盖密度 3 倍。
+
+        Args:
+            cik: SEC CIK 编号
+            ticker: 股票代码
+            start_date: 开始日期（YYYY-MM-DD）
+            end_date: 结束日期（YYYY-MM-DD）
+            max_retries: 最大重试次数
+
+        Returns:
+            成功下载的文件信息列表 [{xml_path, filing_date, period_of_report, ...}]
+        """
+        nport_dir = self.raw_data_dir.parent / "nport"
+        downloaded = []
+
+        for attempt in range(max_retries):
+            try:
+                self._rate_limit()
+                company = Company(cik)
+                filings = company.get_filings(form="N-PORT-P")
+
+                if not filings:
+                    logger.warning(f"{ticker} 没有找到 N-PORT-P 文件")
+                    return downloaded
+
+                start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+                end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+                for filing in filings:
+                    filing_date = filing.filing_date
+
+                    if filing_date < start_dt or filing_date > end_dt:
+                        continue
+
+                    period = getattr(filing, "period_of_report", None)
+                    period_str = str(period)[:7] if period else str(filing_date)[:7]  # YYYY-MM
+
+                    save_dir = nport_dir / cik / period_str
+                    metadata_path = save_dir / "metadata.json"
+
+                    if metadata_path.exists():
+                        logger.info(f"  跳过已下载: {ticker} {period_str}")
+                        downloaded.append({"xml_path": str(save_dir / "nport.xml"),
+                                           "filing_date": str(filing_date),
+                                           "period_of_report": str(period),
+                                           "accession_number": filing.accession_no,
+                                           "ticker": ticker, "cik": cik})
+                        continue
+
+                    save_dir.mkdir(parents=True, exist_ok=True)
+
+                    # N-PORT primary document is XML
+                    try:
+                        xml_content = filing.primary_document.content
+                        if xml_content is None:
+                            logger.warning(f"  {ticker} {period_str}: primary document 内容为空")
+                            continue
+                    except Exception as e:
+                        logger.warning(f"  {ticker} {period_str}: 获取 XML 失败: {e}")
+                        continue
+
+                    xml_path = save_dir / "nport.xml"
+                    if isinstance(xml_content, str):
+                        xml_path.write_text(xml_content, encoding="utf-8")
+                    else:
+                        xml_path.write_bytes(xml_content)
+
+                    metadata = {
+                        "ticker": ticker,
+                        "cik": cik,
+                        "filing_type": "N-PORT-P",
+                        "filing_date": str(filing_date),
+                        "accession_number": filing.accession_no,
+                        "period_of_report": str(period),
+                        "download_time": datetime.now().isoformat(),
+                    }
+                    metadata_path.write_text(json.dumps(metadata, indent=2))
+
+                    logger.info(f"  ✓ N-PORT 下载成功: {ticker} {period_str}")
+                    downloaded.append({"xml_path": str(xml_path),
+                                       "filing_date": str(filing_date),
+                                       "period_of_report": str(period),
+                                       "accession_number": filing.accession_no,
+                                       "ticker": ticker, "cik": cik})
+                    self._rate_limit()
+
+                return downloaded
+
+            except Exception as e:
+                logger.error(f"N-PORT 下载失败 {ticker} (尝试 {attempt+1}/{max_retries}): {e}")
+                if attempt < max_retries - 1:
+                    time.sleep(30)
+                else:
+                    self.failed_downloads.append({
+                        "ticker": ticker, "cik": cik,
+                        "filing_type": "N-PORT-P", "error": str(e),
+                        "timestamp": datetime.now().isoformat(),
+                    })
+        return downloaded
+
+    def download_all_nport(self, start_date: str = "2021-01-01",
+                           end_date: str = "2026-03-31"):
+        """批量下载所有 BDC 的 N-PORT-P 文件。"""
+        logger.info(f"开始下载 {len(self.bdcs)} 个 BDC 的 N-PORT-P 文件 ({start_date} 到 {end_date})...")
+
+        for ticker, bdc_info in self.bdcs.items():
+            cik = bdc_info["cik"] if isinstance(bdc_info, dict) else bdc_info
+            logger.info(f"\n处理 {ticker} (CIK: {cik})...")
+            result = self.download_nport_filings(cik=cik, ticker=ticker,
+                                                  start_date=start_date, end_date=end_date)
+            logger.info(f"  {ticker}: 下载/已有 {len(result)} 个 N-PORT 文件")
+
+        if self.failed_downloads:
+            failed_path = Path("data/parsed/failed_downloads_nport.json")
+            failed_path.parent.mkdir(parents=True, exist_ok=True)
+            failed_path.write_text(json.dumps(self.failed_downloads, indent=2))
+            logger.warning(f"有 {len(self.failed_downloads)} 个文件下载失败，详见 {failed_path}")
+
+        logger.info("N-PORT 下载完成！")
+
+
 if __name__ == "__main__":
     # 使用示例
     collector = BDCCollector(user_agent="PrivateCreditResearch research@example.com")

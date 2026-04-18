@@ -1,8 +1,8 @@
 {
-  "cleaning_date": "2026-04-17T17:24:51.226691",
+  "cleaning_date": "2026-04-18T22:37:53.317156",
   "input_file": "data/parsed/deal_positions.csv",
   "output_file": "data/cleaned/deal_positions_clean.csv",
-  "total_records": 77387,
+  "total_records": 225255,
   "total_columns": 35,
   "new_columns": [
     "investment_type_std",
@@ -17,81 +17,81 @@
   ],
   "statistics": {
     "step0_dedup": {
-      "removed": 2636,
-      "remaining": 77387
+      "removed": 6862,
+      "remaining": 225255
     },
     "step1_investment_type": {
-      "total_records": 77387,
-      "unknown_count": 4196,
-      "unknown_percentage": 5.42,
+      "total_records": 225255,
+      "unknown_count": 21907,
+      "unknown_percentage": 9.73,
       "type_distribution": {
-        "First Lien Term Loan": 23567,
-        "Common Equity": 15830,
-        "Senior Secured Loan": 11155,
-        "Preferred Equity": 7262,
-        "Warrant": 5094,
-        "Unknown": 4196,
-        "First Lien Delayed Draw": 3302,
-        "Second Lien Term Loan": 2949,
-        "Subordinated Debt": 1881,
-        "Revolver": 863,
-        "First Lien Revolver": 842,
-        "Structured Finance / CLO": 370,
-        "Unsecured Note": 70,
-        "Unitranche Loan": 6
+        "First Lien Term Loan": 88583,
+        "Senior Secured Loan": 31743,
+        "Common Equity": 25196,
+        "Unknown": 21907,
+        "Preferred Equity": 14693,
+        "Revolver": 10181,
+        "Second Lien Term Loan": 9325,
+        "First Lien Delayed Draw": 8739,
+        "Subordinated Debt": 5953,
+        "Warrant": 4271,
+        "First Lien Revolver": 4129,
+        "Unitranche Loan": 248,
+        "Structured Finance / CLO": 191,
+        "Unsecured Note": 96
       }
     },
     "step2_industry": {
-      "total_records": 77387,
-      "valid_count": 11070,
-      "valid_percentage": 14.3,
+      "total_records": 225255,
+      "valid_count": 111649,
+      "valid_percentage": 49.57,
       "gics_distribution": {
-        "Other / Unknown": 66393,
-        "Software & Technology": 2254,
-        "Industrials": 1986,
-        "Healthcare": 1776,
-        "Consumer": 1221,
-        "Structured Finance": 1059,
-        "Business Services": 862,
-        "Financial Services": 841,
-        "Media & Telecom": 621,
-        "Real Estate": 166,
-        "Energy": 111,
-        "Education": 97
+        "Other / Unknown": 173110,
+        "Software & Technology": 11780,
+        "Industrials": 8614,
+        "Healthcare": 8490,
+        "Consumer": 7731,
+        "Financial Services": 5340,
+        "Business Services": 3145,
+        "Media & Telecom": 2836,
+        "Energy": 2032,
+        "Structured Finance": 1422,
+        "Real Estate": 501,
+        "Education": 254
       },
-      "backfilled_count": 1618,
-      "valid_count_after_backfill": 12688,
-      "valid_percentage_after_backfill": 16.4
+      "backfilled_count": 49381,
+      "valid_count_after_backfill": 161030,
+      "valid_percentage_after_backfill": 71.49
     },
     "step3_unit_conversion": {
-      "total_conversions": 224,
-      "cb_only_conversions": 263
+      "total_conversions": 364,
+      "cb_only_conversions": 227
     },
     "step4_negative_values": {
-      "unfunded_liability_count": 424,
-      "anomaly_count": 4577,
+      "unfunded_liability_count": 2486,
+      "anomaly_count": 4599,
       "negative_fair_value": 0,
-      "negative_cost_basis": 788,
-      "extreme_fair_value_count": 2386,
-      "cb_unit_mismatch_count": 198,
-      "negative_position_size": 1326
+      "negative_cost_basis": 524,
+      "extreme_fair_value_count": 3016,
+      "cb_unit_mismatch_count": 568,
+      "negative_position_size": 602
     },
     "step5_date_parsing": {
-      "total_debt_records": 49201,
-      "parsed_count": 44373,
-      "parse_rate_percentage": 90.19
+      "total_debt_records": 181095,
+      "parsed_count": 155456,
+      "parse_rate_percentage": 85.84
     },
     "step6_interest_rate": {
-      "base_rate_valid_count": 42553,
-      "spread_extracted_count": 17489,
-      "pik_extracted_count": 3719,
+      "base_rate_valid_count": 149337,
+      "spread_extracted_count": 50063,
+      "pik_extracted_count": 3333,
       "pik_is_pik_corrected": 0,
-      "libor_legacy_count": 989
+      "libor_legacy_count": 5355
     },
     "step7_borrower_name": {
-      "unique_original": 9184,
-      "unique_clean": 8208,
-      "reduction_percentage": 10.63
+      "unique_original": 24565,
+      "unique_clean": 21271,
+      "reduction_percentage": 13.41
     }
   }
 }
